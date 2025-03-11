@@ -16,7 +16,7 @@ app.use((err, req, res, next) => {
 
 // API Routes
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'healthy', message: 'Sono Smart API is running' });
+  res.json({ status: 'healthy', message: 'SonoSmart API is running' });
 });
 
 // Start server

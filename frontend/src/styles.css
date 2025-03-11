@@ -1,1 +1,83 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Primary Blues */
+  --primary-color: #1a56db;
+  --primary-light: #3b82f6;
+  --primary-dark: #1e40af;
+  --primary-rgb: 26, 86, 219;
+
+  /* Secondary Colors */
+  --secondary-color: #0369a1;
+  --secondary-light: #0ea5e9;
+  --secondary-dark: #075985;
+
+  /* Background Colors */
+  --light-bg: #f9fafb;
+  --bg-secondary: #f3f4f6;
+  --bg-hover: #e5e7eb;
+
+  /* Surface Colors */
+  --surface-1: #ffffff;
+  --surface-2: #f9fafb;
+  --surface-3: #f3f4f6;
+
+  /* Text Colors */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-on-primary: #ffffff;
+
+  /* Utility Colors */
+  --gray-400: #9ca3af;
+  --error: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+}
+
+* {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol";
+  background-color: var(--light-bg);
+  color: var(--text-color);
+}
+
+/* Global button styles */
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--secondary-color);
+}
+
+button:disabled {
+  background-color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+/* Global link styles */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}
