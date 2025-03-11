@@ -1,14 +1,30 @@
 <div class="app-container">
   <header class="app-header">
     <nav class="nav-container">
-      <div class="logo">SonoSmart</div>
+      <div class="logo">
+        <div class="logo-icon">
+          <span class="material-icons-outlined">medical_services</span>
+        </div>
+        <span>SonoSmart</span>
+      </div>
       <div class="nav-links">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
         <a routerLink="about" routerLinkActive="active">About Us</a>
-        <a href="#">Patients</a>
-        <a href="#">Scans</a>
-        <a href="#">Reports</a>
-        <a href="#">Logout</a>
+        <ng-container *ngIf="!authService.isLoggedIn()">
+          <a routerLink="login" routerLinkActive="active">Login</a>
+          <a routerLink="register" routerLinkActive="active">Register</a>
+        </ng-container>
+        <ng-container *ngIf="authService.isLoggedIn()">
+          <a href="#">Patients</a>
+          <a href="#">Scans</a>
+          <a href="#">Reports</a>
+          <div class="user-menu">
+            <div class="user-avatar" [title]="authService.getCurrentUser()?.firstName || 'User'">
+              {{ (authService.getCurrentUser()?.firstName || 'U')[0] }}
+            </div>
+            <a href="#" (click)="$event.preventDefault(); logout()">Logout</a>
+          </div>
+        </ng-container>
       </div>
     </nav>
   </header>

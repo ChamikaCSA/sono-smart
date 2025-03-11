@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ApiService } from './services/api.service';
+import { AuthService } from './services/auth.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -14,7 +15,7 @@ export class AppComponent implements OnInit {
   title = 'SonoSmart';
   backendMessage = 'Connecting to backend...';
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, public authService: AuthService) {}
 
   ngOnInit() {
     this.apiService.getHealthStatus().subscribe({
@@ -26,5 +27,10 @@ export class AppComponent implements OnInit {
         console.error('Backend connection error:', error);
       }
     });
+  }
+  
+  logout() {
+    this.authService.logout();
+    window.location.href = '/';
   }
 }
