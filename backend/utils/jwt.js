@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
 
 // Get JWT secret from environment variables or use a default for development
-const JWT_SECRET = process.env.JWT_SECRET || 'sono-smart-jwt-secret-dev-only';
-const JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRE = process.env.JWT_EXPIRE;
 
 // Generate JWT token for a user
 const generateToken = (userId) => {

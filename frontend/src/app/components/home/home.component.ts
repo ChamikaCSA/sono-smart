@@ -1,10 +1,30 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AboutComponent } from '../about/about.component';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AboutComponent],
+  animations: [
+    trigger('expandCollapse', [
+      state('collapsed', style({
+        height: '0',
+        overflow: 'hidden',
+        opacity: '0',
+        padding: '0',
+        margin: '0'
+      })),
+      state('expanded', style({
+        height: '*',
+        opacity: '1'
+      })),
+      transition('collapsed <=> expanded', [
+        animate('300ms ease-in-out')
+      ])
+    ])
+  ],
   template: `
     <div class="home-container">
       <section class="hero-section">
@@ -21,75 +41,68 @@ import { CommonModule } from '@angular/common';
         </div>
       </section>
 
-      <section class="features-section">
-        <h2>Why Choose SonoSmart?</h2>
-        <div class="features-grid">
-          <div class="feature-card animate-fade-in">
-            <span class="material-icons-outlined">speed</span>
+      <section class="our-solution-section" id="solutions">
+        <h2>What We Offer?</h2>
+        <p class="section-description">AI-driven ultrasound organ detection system that enhances diagnostic accuracy and efficiency</p>
+
+        <div class="solution-grid">
+          <div class="solution-card animate-fade-in">
+            <span class="material-icons-outlined">visibility</span>
             <h3>Real-Time Detection</h3>
-            <p>Instant organ detection and analysis during ultrasound procedures</p>
+            <p>Instantly identifies and highlights organs during ultrasound procedures</p>
           </div>
-          <div class="feature-card animate-fade-in">
-            <span class="material-icons-outlined">psychology</span>
-            <h3>AI-Powered Accuracy</h3>
-            <p>Advanced YOLOv8 model for precise organ identification</p>
+          <div class="solution-card animate-fade-in">
+            <span class="material-icons-outlined">medical_information</span>
+            <h3>Multi-Organ Recognition</h3>
+            <p>Accurately detects bladder, bowel, gallbladder, kidney, liver, and spleen</p>
           </div>
-          <div class="feature-card animate-fade-in">
+          <div class="solution-card animate-fade-in">
+            <span class="material-icons-outlined">health_and_safety</span>
+            <h3>Clinical Assistance</h3>
+            <p>Helps medical professionals improve diagnostic efficiency and accuracy</p>
+          </div>
+          <div class="solution-card animate-fade-in">
             <span class="material-icons-outlined">school</span>
-            <h3>Learning Platform</h3>
-            <p>Interactive training for medical students and professionals</p>
-          </div>
-          <div class="feature-card animate-fade-in">
-            <span class="material-icons-outlined">verified</span>
-            <h3>Clinically Validated</h3>
-            <p>Tested and verified by healthcare professionals</p>
+            <h3>Training Platform</h3>
+            <p>Assists medical students in practicing and verifying their predictions</p>
           </div>
         </div>
       </section>
 
-      <section class="ai-showcase">
-        <div class="showcase-content">
-          <h2>Advanced AI Capabilities</h2>
-          <p>Our system detects and identifies multiple abdominal organs:</p>
-          <ul class="organ-list">
-            <li>Bladder</li>
-            <li>Bowel</li>
-            <li>Gallbladder</li>
-            <li>Kidney</li>
-            <li>Liver</li>
-            <li>Spleen</li>
-          </ul>
+      <section class="for-users-section">
+         <div class="section-header">
+          <button class="toggle-btn" (click)="toggleUsersSection()">
+            <span class="material-icons-outlined">{{ isUsersSectionExpanded ? 'expand_less' : 'expand_more' }}</span>
+            {{ isUsersSectionExpanded ? 'Show Less' : 'Show More' }}
+          </button>
         </div>
-        <div class="showcase-visual animate-fade-in">
-          <div class="demo-placeholder">
-            <span class="material-icons-outlined">biotech</span>
-            <p>Interactive Demo</p>
+        <div class="users-grid" [@expandCollapse]="isUsersSectionExpanded ? 'expanded' : 'collapsed'" *ngIf="isUsersSectionExpanded || isAnimating">
+          <div class="user-card animate-fade-in">
+            <h3>For Medical Professionals</h3>
+            <p>We provide an AI-driven ultrasound organ detection system that delivers real-time, accurate identification of abdominal organs, including bladder, bowel, gallbladder, kidney, liver, and spleen. This system significantly reduces cognitive load, enhancing diagnostic efficiency and allowing you to focus more on patient care and clinical decision-making.</p>
+            <ul class="benefits-list">
+              <li><span class="material-icons-outlined">speed</span>Real-time organ detection</li>
+              <li><span class="material-icons-outlined">psychology</span>Reduced cognitive load</li>
+              <li><span class="material-icons-outlined">verified</span>Enhanced diagnostic accuracy</li>
+              <li><span class="material-icons-outlined">schedule</span>Improved workflow efficiency</li>
+            </ul>
+          </div>
+
+          <div class="user-card animate-fade-in">
+            <h3>For Medical Students</h3>
+            <p>We offer an AI-driven ultrasound organ detection system to help medical students refine their diagnostic skills. You can upload ultrasound images and predict the organs bladder, bowel, gallbladder, kidney, liver, and spleen. And the system will verify whether your predictions are correct. Additionally, the QA Session with MCQs featuring ultrasound images of abnormal organs will further help improve your diagnostic accuracy and prepare you for real-world medical imaging tasks.</p>
+            <ul class="benefits-list">
+              <li><span class="material-icons-outlined">school</span>Practice predictions</li>
+              <li><span class="material-icons-outlined">quiz</span>MCQ sessions</li>
+              <li><span class="material-icons-outlined">check_circle</span>Instant verification</li>
+              <li><span class="material-icons-outlined">trending_up</span>Skill improvement tracking</li>
+            </ul>
           </div>
         </div>
       </section>
 
-      <section class="benefits-section">
-        <h2>Benefits for Healthcare</h2>
-        <div class="benefits-grid">
-          <div class="benefit-card">
-            <h3>For Clinicians</h3>
-            <ul>
-              <li>Reduced diagnostic time</li>
-              <li>Enhanced accuracy</li>
-              <li>Streamlined workflow</li>
-              <li>Decision support</li>
-            </ul>
-          </div>
-          <div class="benefit-card">
-            <h3>For Students</h3>
-            <ul>
-              <li>Hands-on training</li>
-              <li>Real-world cases</li>
-              <li>Immediate feedback</li>
-              <li>Skill development</li>
-            </ul>
-          </div>
-        </div>
+      <section id="about">
+        <app-about></app-about>
       </section>
     </div>
   `,
@@ -98,6 +111,7 @@ import { CommonModule } from '@angular/common';
       max-width: 1200px;
       margin: 0 auto;
       scroll-behavior: smooth;
+      scroll-padding-top: 2rem;
     }
 
     /* Hero Section */
@@ -189,6 +203,71 @@ import { CommonModule } from '@angular/common';
       width: 100%;
       height: 100%;
       opacity: 0.9;
+    }
+
+    /* Our Solution Section */
+    .our-solution-section {
+      margin-bottom: 4rem;
+      text-align: center;
+    }
+
+    .our-solution-section h2 {
+      font-size: 2.5rem;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .section-description {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      margin-bottom: 3rem;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .solution-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin: 0 auto;
+    }
+
+    .solution-card {
+      background-color: var(--surface-1);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .solution-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .solution-card .material-icons-outlined {
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+      background: rgba(var(--primary-rgb), 0.1);
+      padding: 1rem;
+      border-radius: 50%;
+    }
+
+    .solution-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .solution-card p {
+      color: var(--text-secondary);
+      line-height: 1.6;
     }
 
     /* Features Section */
@@ -305,6 +384,144 @@ import { CommonModule } from '@angular/common';
       margin-bottom: 1rem;
     }
 
+    /* For Users Section */
+    .for-users-section {
+      margin-bottom: 4rem;
+      text-align: center;
+    }
+
+    .for-users-section h2 {
+      font-size: 2.5rem;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--primary-color);
+      color: var(--text-on-primary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .toggle-btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .users-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+      margin: 0 auto;
+      margin-top: 1rem;
+    }
+
+    .user-card {
+      background-color: var(--surface-1);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .user-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .user-card h3 {
+      font-size: 1.8rem;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .user-card h3::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: var(--primary-color);
+      border-radius: 2px;
+    }
+
+    .user-card p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .benefits-list {
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0 0 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .benefits-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-secondary);
+      background-color: var(--bg-secondary);
+      padding: 0.75rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .benefits-list li:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .benefits-list li .material-icons-outlined {
+      color: var(--primary-color);
+      font-size: 1.25rem;
+    }
+
+    @media screen and (max-width: 768px) {
+      .users-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .benefits-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* Benefits Section */
     .benefits-section {
       margin-bottom: 4rem;
@@ -389,7 +606,53 @@ import { CommonModule } from '@angular/common';
       .benefits-grid {
         grid-template-columns: 1fr;
       }
+
+      .solution-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Animation Classes */
+    .animate-fade-in {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .animate-slide-up {
+      animation: slideUp 0.8s ease-in-out;
+    }
+
+    .animate-slide-in {
+      animation: slideIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
     }
   `]
 })
-export class HomeComponent {}
+export class HomeComponent {
+  isUsersSectionExpanded = false;
+  isAnimating = false;
+
+  toggleUsersSection() {
+    this.isAnimating = true;
+    this.isUsersSectionExpanded = !this.isUsersSectionExpanded;
+
+    if (!this.isUsersSectionExpanded) {
+      setTimeout(() => {
+        this.isAnimating = false;
+      }, 300);
+    }
+  }
+}

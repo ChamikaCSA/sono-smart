@@ -70,9 +70,9 @@ import { CommonModule } from '@angular/common';
 
     .hero-section {
       text-align: center;
-      margin-bottom: 4rem;
+      margin-bottom: 2rem;
       background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05) 0%, rgba(var(--primary-rgb), 0.02) 100%);
-      padding: 4rem calc((100vw - 1200px) / 2);
+      padding: 2rem calc((100vw - 1200px) / 2);
       width: 100vw;
       position: relative;
       left: 50%;
@@ -82,8 +82,8 @@ import { CommonModule } from '@angular/common';
     }
 
     .hero-content h1 {
-      font-size: 3.5rem;
-      margin-bottom: 1.5rem;
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
       background: var(--primary-color);
       -webkit-background-clip: text;
       background-clip: text;
@@ -91,18 +91,19 @@ import { CommonModule } from '@angular/common';
     }
 
     .hero-description {
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       color: var(--text-secondary);
     }
 
     .content-section {
       display: grid;
+      gap: 1.5rem;
     }
 
     .content-section > div {
       background: var(--surface-1);
-      padding: 2.5rem;
-      margin-bottom: 4rem;
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
       border-radius: 16px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -115,8 +116,8 @@ import { CommonModule } from '@angular/common';
 
     h2 {
       color: var(--primary-color);
-      font-size: 2.2rem;
-      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
       position: relative;
       display: inline-block;
     }
@@ -124,9 +125,9 @@ import { CommonModule } from '@angular/common';
     h2::after {
       content: '';
       position: absolute;
-      bottom: -8px;
+      bottom: -6px;
       left: 0;
-      width: 60px;
+      width: 50px;
       height: 3px;
       background: var(--primary-color);
       border-radius: 2px;
@@ -134,27 +135,27 @@ import { CommonModule } from '@angular/common';
 
     h3 {
       color: var(--text-on-primary);
-      font-size: 1.6rem;
-      margin-bottom: 1rem;
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
     }
 
     p {
-      font-size: 1.1rem;
-      line-height: 1.8;
+      font-size: 1rem;
+      line-height: 1.6;
       color: var(--text-secondary);
-      margin-bottom: 1.2rem;
+      margin-bottom: 1rem;
     }
 
     .service-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2rem;
-      margin-top: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
     }
 
     .service-card {
       background: var(--bg-secondary);
-      padding: 2.5rem;
+      padding: 1.8rem;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
       transition: all 0.3s ease;
@@ -164,14 +165,14 @@ import { CommonModule } from '@angular/common';
 
     .service-card h3 {
       color: var(--text-secondary);
-      font-size: 1.6rem;
-      margin-bottom: 1rem;
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
     }
 
     .service-card p {
       color: var(--text-secondary);
-      font-size: 1.1rem;
-      line-height: 1.8;
+      font-size: 1rem;
+      line-height: 1.6;
       margin-bottom: 0;
       opacity: 0.9;
     }

@@ -9,7 +9,7 @@
       </div>
       <div class="nav-links">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-        <a routerLink="about" routerLinkActive="active">About Us</a>
+        <a href="#about">About Us</a>
         <ng-container *ngIf="!authService.isLoggedIn()">
           <a routerLink="login" routerLinkActive="active">Login</a>
           <a routerLink="register" routerLinkActive="active">Register</a>
