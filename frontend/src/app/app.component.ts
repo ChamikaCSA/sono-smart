@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { ApiService } from './services/api.service';
 import { AuthService } from './services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -14,8 +14,13 @@ import { CommonModule } from '@angular/common';
 export class AppComponent implements OnInit {
   title = 'SonoSmart';
   backendMessage = 'Connecting to backend...';
+  currentYear = new Date().getFullYear();
 
-  constructor(private apiService: ApiService, public authService: AuthService) {}
+  constructor(
+    private apiService: ApiService,
+    public authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.apiService.getHealthStatus().subscribe({
@@ -28,9 +33,29 @@ export class AppComponent implements OnInit {
       }
     });
   }
-  
+
   logout() {
     this.authService.logout();
     window.location.href = '/';
+  }
+
+  navigateToAbout(event: Event) {
+    event.preventDefault();
+    if (this.router.url !== '/') {
+      this.router.navigate(['/'])
+        .then(() => {
+          setTimeout(() => {
+            const aboutSection = document.getElementById('about');
+            if (aboutSection) {
+              aboutSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 100);
+        });
+    } else {
+      const aboutSection = document.getElementById('about');
+      if (aboutSection) {
+        aboutSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   }
 }

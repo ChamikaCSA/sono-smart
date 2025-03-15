@@ -7,6 +7,7 @@ const cors = require('cors');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const patientRoutes = require('./routes/patientRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -24,6 +25,7 @@ app.use((err, req, res, next) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/patients', patientRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

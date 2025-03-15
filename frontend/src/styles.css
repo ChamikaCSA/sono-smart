@@ -17,6 +17,11 @@
   --gray-400: #cbd5e1;
   --error-rgb: 220, 38, 38;
   --error-color: #dc2626;
+  --danger-rgb: 220, 38, 38;
+  --danger-color: #dc2626;
+  --danger-dark: #b91c1c;
+  --info-rgb: 59, 130, 246;
+  --info-color: #3b82f6;
   --warning-color: #f59e0b;
   --success-color: #10b981;
   --disabled-color: #94a3b8;
