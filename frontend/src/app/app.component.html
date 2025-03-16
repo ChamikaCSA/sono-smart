@@ -21,7 +21,7 @@
           <ng-container *ngIf="authService.getCurrentUser()?.role === 'trainee'">
             <a routerLink="qa" routerLinkActive="active">QA</a>
           </ng-container>
-          <a href="#">Scans</a>
+          <a routerLink="scans" routerLinkActive="active">Scans</a>
           <a href="#">Reports</a>
           <div class="user-menu">
             <div class="user-avatar" [title]="authService.getCurrentUser()?.firstName || 'User'">
