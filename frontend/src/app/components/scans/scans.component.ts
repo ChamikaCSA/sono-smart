@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { PatientService, Patient } from '../../services/patient.service';
+import { ScanService, ScanSection } from '../../services/scan.service';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
@@ -24,6 +25,7 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
 })
 export class ScansComponent implements OnInit {
   isLoading = false;
+  sessionStartTime: Date | null = null;
 
   // Interface for scan section data
   scanSections: {
@@ -55,12 +57,15 @@ export class ScansComponent implements OnInit {
 
   constructor(
     public authService: AuthService,
-    private patientService: PatientService
+    private patientService: PatientService,
+    private scanService: ScanService
   ) {}
 
   ngOnInit(): void {
     // Initialize component with first scan section
     this.addScanSection();
+    // Record session start time
+    this.sessionStartTime = new Date();
   }
 
   onFileSelected(event: Event, sectionIndex: number = 0): void {
@@ -101,6 +106,8 @@ export class ScansComponent implements OnInit {
       section.predictionSuccess = section.userPrediction.toLowerCase() === correctOrgan.toLowerCase();
       section.predictionResult = correctOrgan;
       this.isLoading = false;
+
+      // No longer saving individual results - will save all at once with End Session button
     }, 1500);
   }
 
@@ -210,6 +217,61 @@ export class ScansComponent implements OnInit {
     if (this.scanSections.length > 1 && sectionIndex >= 0 && sectionIndex < this.scanSections.length) {
       this.scanSections.splice(sectionIndex, 1);
     }
+  }
+
+  // Check if there are any completed scans
+  hasCompletedScans(): boolean {
+    return this.scanSections.some(section =>
+      section.predictionResult && section.userPrediction);
+  }
+
+  // End session and save all results at once
+  endSession(): void {
+    this.isLoading = true;
+
+    // Get all completed sections
+    const completedSections = this.scanSections.filter(s =>
+      s.predictionResult && s.userPrediction);
+    const correctSections = completedSections.filter(s => s.predictionSuccess);
+
+    if (completedSections.length === 0) {
+      this.isLoading = false;
+      return;
+    }
+
+    // Record session end time
+    const sessionEndTime = new Date();
+
+    // Prepare scan sections data
+    const scanSectionsData: ScanSection[] = completedSections.map(s => ({
+      imageUrl: s.imagePreview || '',
+      userPrediction: s.userPrediction,
+      correctOrgan: s.predictionResult || '',
+      isCorrect: s.predictionSuccess || false
+    }));
+
+    // Save all scan results at once
+    this.scanService.saveScanResult({
+      scanSections: scanSectionsData,
+      totalScans: completedSections.length,
+      correctScans: correctSections.length,
+      startTime: this.sessionStartTime,
+      endTime: sessionEndTime
+    }).subscribe(result => {
+      console.log('Scan session saved:', result);
+      this.isLoading = false;
+
+      // Show success message (could be enhanced with a proper notification system)
+      alert('Session saved successfully!');
+
+      // Reset all scan sections to start a new session
+      this.scanSections = [];
+      this.addScanSection();
+    }, error => {
+      console.error('Error saving scan session:', error);
+      this.isLoading = false;
+      alert('Error saving session. Please try again.');
+    });
   }
 
   // Mock functions to simulate backend responses

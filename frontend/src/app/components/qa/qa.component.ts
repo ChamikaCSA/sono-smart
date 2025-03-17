@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { interval, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
+import { QuizService, QuizAnswer, QuizResult } from 'src/app/services/quiz.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 interface Question {
   id: number;
@@ -21,7 +23,13 @@ interface Question {
   styleUrls: ['./qa.component.css'],
 })
 export class QaComponent implements OnInit, OnDestroy {
+  constructor(
+    private quizService: QuizService,
+    private authService: AuthService
+  ) {}
   isQuizStarted: boolean = false;
+  quizStartTime: Date | null = null;
+  quizEndTime: Date | null = null;
 
   questions: Question[] = [
     {
@@ -124,6 +132,53 @@ export class QaComponent implements OnInit, OnDestroy {
     this.correctAnswers = this.questions.filter(
       q => q.selectedAnswer === q.correctAnswer
     ).length;
+
+    // Record quiz end time
+    this.quizEndTime = new Date();
+
+    // Save quiz results to database if user is logged in
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        // Prepare quiz answers data
+        const answers: QuizAnswer[] = this.questions.map(q => ({
+          questionId: q.id,
+          selectedAnswer: q.selectedAnswer !== undefined ? q.selectedAnswer : -1,
+          isCorrect: q.selectedAnswer === q.correctAnswer
+        }));
+
+        // Calculate time spent (from 15:00 format)
+        const timeComponents = this.remainingTime.split(':');
+        const minutesRemaining = parseInt(timeComponents[0]);
+        const secondsRemaining = parseInt(timeComponents[1]);
+        const totalSecondsRemaining = (minutesRemaining * 60) + secondsRemaining;
+        const totalSecondsSpent = (15 * 60) - totalSecondsRemaining;
+        const minutesSpent = Math.floor(totalSecondsSpent / 60);
+        const secondsSpent = totalSecondsSpent % 60;
+        const timeSpent = `${minutesSpent}:${secondsSpent.toString().padStart(2, '0')}`;
+
+        // Calculate session duration in seconds
+        const sessionDuration = Math.round(
+          (this.quizEndTime!.getTime() - this.quizStartTime!.getTime()) / 1000
+        );
+
+        // Create quiz result object
+        const quizResult: Omit<QuizResult, '_id' | 'user' | 'createdAt'> = {
+          correctAnswers: this.correctAnswers,
+          totalQuestions: this.questions.length,
+          accuracy: (this.correctAnswers / this.questions.length) * 100,
+          timeSpent: timeSpent,
+          startTime: this.quizStartTime,
+          endTime: this.quizEndTime,
+          sessionDuration: sessionDuration,
+          answers: answers
+        };
+
+        // Save quiz result
+        this.quizService.saveQuizResult(quizResult).subscribe(result => {
+          console.log('Quiz result saved:', result);
+        });
+      }
+    });
   }
 
   restartQuiz(): void {
@@ -143,6 +198,7 @@ export class QaComponent implements OnInit, OnDestroy {
 
   startQuiz(): void {
     this.isQuizStarted = true;
+    this.quizStartTime = new Date();
     this.startTimer();
   }
 }

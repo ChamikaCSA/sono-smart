@@ -83,6 +83,10 @@
         <button class="btn-primary add-scan-btn" (click)="addScanSection()">
           <span class="material-icons-outlined">add</span> Add New Scan
         </button>
+
+        <button class="btn-primary end-session-btn" *ngIf="authService.getCurrentUser()?.role === 'trainee' && hasCompletedScans()" (click)="endSession()">
+          <span class="material-icons-outlined">save</span> End Session
+        </button>
       </div>
     </div>
 

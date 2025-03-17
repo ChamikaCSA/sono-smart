@@ -8,6 +8,8 @@ const cors = require('cors');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const patientRoutes = require('./routes/patientRoutes');
+const quizRoutes = require('./routes/quizRoutes');
+const scanRoutes = require('./routes/scanRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -26,6 +28,8 @@ app.use((err, req, res, next) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
+app.use('/api/quiz', quizRoutes);
+app.use('/api/scan', scanRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {
