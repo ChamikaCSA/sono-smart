@@ -128,7 +128,7 @@
               <span *ngIf="!isLoading">Get Results</span>
               <div *ngIf="isLoading" class="loading-spinner-small"></div>
             </button>
-            <button class="btn-primary" (click)="openReportDialog()" [disabled]="isLoading">
+            <button class="btn-primary" (click)="openReportDialog(i)" [disabled]="isLoading">
               <span *ngIf="!isLoading">Create Report</span>
               <div *ngIf="isLoading" class="loading-spinner-small"></div>
             </button>
@@ -147,7 +147,7 @@
             </div>
 
             <div class="report-container" *ngIf="isReportGenerated">
-              <h3>Diagnostic Report</h3>
+              <h3>Patient Report</h3>
               <div class="report-content">
                 <pre>{{ reportText }}</pre>
               </div>
@@ -158,6 +158,9 @@
                 <button class="btn-primary">
                   <span class="material-icons-outlined">save</span> Save to Patient Record
                 </button>
+              </div>
+              <div class="report-saved-message">
+                <p><span class="material-icons-outlined">check_circle</span> Patient report has been saved to the database</p>
               </div>
             </div>
           </div>
@@ -187,21 +190,84 @@
         </button>
       </div>
       <div class="modal-body">
+        <!-- Patient Selection and Auto-filled Details -->
         <div class="form-group">
           <label for="patientSelect">Select Patient</label>
-          <select id="patientSelect" [(ngModel)]="selectedPatientId" class="form-control" required>
+          <select id="patientSelect" [(ngModel)]="selectedPatientId" (change)="onPatientSelected()" class="form-control" required>
             <option value="">-- Select a patient --</option>
             <option *ngFor="let patient of patients" [value]="patient._id">{{ patient.firstName }} {{ patient.lastName }}</option>
           </select>
         </div>
+
+        <!-- Patient Details (Auto-filled) -->
+        <div class="patient-details" *ngIf="selectedPatient">
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Age</label>
+              <input type="text" [value]="calculateAge(selectedPatient.dateOfBirth)" class="form-control" readonly>
+            </div>
+            <div class="form-group half-width">
+              <label>Gender</label>
+              <input type="text" [value]="selectedPatient.gender" class="form-control" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Email</label>
+              <input type="text" [value]="selectedPatient.email || 'N/A'" class="form-control" readonly>
+            </div>
+            <div class="form-group half-width">
+              <label>Phone</label>
+              <input type="text" [value]="selectedPatient.phone || 'N/A'" class="form-control" readonly>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scan Images Section -->
+        <div class="form-group">
+          <label>Image</label>
+          <div class="scan-image-container">
+            <div *ngIf="scanSections[activeSectionIndex]?.imagePreview" class="scan-preview">
+              <img [src]="scanSections[activeSectionIndex].imagePreview" alt="Scan image" class="scan-thumbnail">
+              <div class="form-group">
+                <label for="organType">Organ Name</label>
+                <select id="organType" [(ngModel)]="scanSections[activeSectionIndex].reportOrgan" class="form-control">
+                  <option value="" disabled selected>Select organ</option>
+                  <option value="Liver">Liver</option>
+                  <option value="Kidney">Kidney</option>
+                  <option value="Spleen">Spleen</option>
+                  <option value="Gallbladder">Gallbladder</option>
+                  <option value="Bladder">Bladder</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diagnostic Details -->
+        <div class="form-group">
+          <label for="diagnosticName">Diagnostic Name</label>
+          <input type="text" id="diagnosticName" [(ngModel)]="diagnosticName" class="form-control" placeholder="Enter diagnostic name">
+        </div>
+
+        <div class="form-group">
+          <label for="instructions">Instructions</label>
+          <textarea id="instructions" [(ngModel)]="instructions" class="form-control" rows="3" placeholder="Enter instructions for the patient"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="conditionDetails">Condition Details</label>
+          <textarea id="conditionDetails" [(ngModel)]="conditionDetails" class="form-control" rows="4" placeholder="Enter details about the condition"></textarea>
+        </div>
+
         <div class="form-group">
           <label for="reportNotes">Additional Notes</label>
-          <textarea id="reportNotes" [(ngModel)]="reportNotes" class="form-control" rows="5" placeholder="Enter any additional notes or observations"></textarea>
+          <textarea id="reportNotes" [(ngModel)]="reportNotes" class="form-control" rows="3" placeholder="Enter any additional notes or observations"></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeReportDialog($event)">Cancel</button>
-        <button class="btn-primary" (click)="generateReport()" [disabled]="isLoading">
+        <button class="btn-primary" (click)="generateReport()" [disabled]="isLoading || !selectedPatientId">
           <span *ngIf="!isLoading">Generate</span>
           <div *ngIf="isLoading" class="loading-spinner-small"></div>
         </button>

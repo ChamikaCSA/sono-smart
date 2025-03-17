@@ -4,7 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { PatientService, Patient } from '../../services/patient.service';
 import { ScanService, ScanSection } from '../../services/scan.service';
-import { trigger, state, style, animate, transition } from '@angular/animations';
+import { ReportService, ScanImage } from '../../services/report.service';
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition,
+} from '@angular/animations';
 
 @Component({
   selector: 'app-scans',
@@ -14,14 +21,15 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
   styleUrls: ['./scans.component.css'],
   animations: [
     trigger('fadeIn', [
-      state('void', style({
-        opacity: 0
-      })),
-      transition('void => *', [
-        animate('0.3s ease-in')
-      ])
-    ])
-  ]
+      state(
+        'void',
+        style({
+          opacity: 0,
+        })
+      ),
+      transition('void => *', [animate('0.3s ease-in')]),
+    ]),
+  ],
 })
 export class ScansComponent implements OnInit {
   isLoading = false;
@@ -34,18 +42,33 @@ export class ScansComponent implements OnInit {
     imagePreview: string | null;
     predictionResult: string | null;
     predictionSuccess: boolean | null;
-    detectedOrgans: { name: string, confidence: number }[];
+    detectedOrgans: { name: string; confidence: number }[];
     userPrediction: string;
+    reportOrgan: string; // Added for report creation
   }[] = [];
 
   // Current active scan section (for backward compatibility)
-  get selectedFile(): File | null { return this.scanSections[0]?.selectedFile || null; }
-  get imagePreview(): string | null { return this.scanSections[0]?.imagePreview || null; }
-  get predictionResult(): string | null { return this.scanSections[0]?.predictionResult || null; }
-  get predictionSuccess(): boolean | null { return this.scanSections[0]?.predictionSuccess || null; }
-  get detectedOrgans(): { name: string, confidence: number }[] { return this.scanSections[0]?.detectedOrgans || []; }
-  get userPrediction(): string { return this.scanSections[0]?.userPrediction || ''; }
-  set userPrediction(value: string) { if (this.scanSections[0]) this.scanSections[0].userPrediction = value; }
+  get selectedFile(): File | null {
+    return this.scanSections[0]?.selectedFile || null;
+  }
+  get imagePreview(): string | null {
+    return this.scanSections[0]?.imagePreview || null;
+  }
+  get predictionResult(): string | null {
+    return this.scanSections[0]?.predictionResult || null;
+  }
+  get predictionSuccess(): boolean | null {
+    return this.scanSections[0]?.predictionSuccess || null;
+  }
+  get detectedOrgans(): { name: string; confidence: number }[] {
+    return this.scanSections[0]?.detectedOrgans || [];
+  }
+  get userPrediction(): string {
+    return this.scanSections[0]?.userPrediction || '';
+  }
+  set userPrediction(value: string) {
+    if (this.scanSections[0]) this.scanSections[0].userPrediction = value;
+  }
 
   // For professionals
   reportText: string = '';
@@ -54,11 +77,18 @@ export class ScansComponent implements OnInit {
   // For patient selection
   patients: Patient[] = [];
   selectedPatientId: string = '';
+  selectedPatient: Patient | null = null;
+
+  // For report form
+  diagnosticName: string = '';
+  instructions: string = '';
+  conditionDetails: string = '';
 
   constructor(
     public authService: AuthService,
     private patientService: PatientService,
-    private scanService: ScanService
+    private scanService: ScanService,
+    private reportService: ReportService
   ) {}
 
   ngOnInit(): void {
@@ -103,7 +133,8 @@ export class ScansComponent implements OnInit {
     setTimeout(() => {
       // Mock response - in a real app, this would come from the backend
       const correctOrgan = this.mockGetCorrectOrgan();
-      section.predictionSuccess = section.userPrediction.toLowerCase() === correctOrgan.toLowerCase();
+      section.predictionSuccess =
+        section.userPrediction.toLowerCase() === correctOrgan.toLowerCase();
       section.predictionResult = correctOrgan;
       this.isLoading = false;
 
@@ -128,8 +159,10 @@ export class ScansComponent implements OnInit {
   // Dialog properties
   showReportDialog = false;
   reportNotes: string = '';
+  activeSectionIndex: number = 0; // Track which scan section is being reported on
 
-  openReportDialog(): void {
+  openReportDialog(sectionIndex: number = 0): void {
+    this.activeSectionIndex = sectionIndex;
     this.showReportDialog = true;
     this.loadPatients();
   }
@@ -141,43 +174,129 @@ export class ScansComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading patients:', error);
-      }
+      },
     });
+  }
+
+  onPatientSelected(): void {
+    if (this.selectedPatientId) {
+      this.patientService.getPatient(this.selectedPatientId).subscribe({
+        next: (patient) => {
+          this.selectedPatient = patient;
+        },
+        error: (error) => {
+          console.error('Error loading patient details:', error);
+        },
+      });
+    } else {
+      this.selectedPatient = null;
+    }
+  }
+
+  calculateAge(dateOfBirth: string): string {
+    if (!dateOfBirth) return 'N/A';
+
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age.toString();
   }
 
   closeReportDialog(event: Event): void {
     const target = event.target as HTMLElement;
-    if (target.classList.contains('modal-overlay') || target.classList.contains('close-btn') || target.closest('.close-btn') || target.classList.contains('btn-secondary')) {
+    if (
+      target.classList.contains('modal-overlay') ||
+      target.classList.contains('close-btn') ||
+      target.closest('.close-btn') ||
+      target.classList.contains('btn-secondary')
+    ) {
       this.showReportDialog = false;
     }
   }
 
   generateReport(): void {
-    if (!this.selectedPatientId) {
+    if (!this.selectedPatientId || !this.selectedPatient) {
       return; // Require patient selection
     }
 
     this.isLoading = true;
 
     // Get selected patient information
-    let patientInfo = '';
+    const patientInfo = {
+      name: `${this.selectedPatient.firstName} ${this.selectedPatient.lastName}`,
+      age: this.calculateAge(this.selectedPatient.dateOfBirth),
+      gender: this.selectedPatient.gender,
+      email: this.selectedPatient.email || 'N/A',
+      phone: this.selectedPatient.phone || 'N/A',
+    };
 
-    const selectedPatient = this.patients.find(p => p._id === this.selectedPatientId);
-    if (selectedPatient) {
-      patientInfo = `${selectedPatient.firstName} ${selectedPatient.lastName}`;
+    // Get only the active scan section information
+    const activeSection = this.scanSections[this.activeSectionIndex];
+    const scanImages: ScanImage[] = [];
+
+    if (activeSection && activeSection.imagePreview && activeSection.reportOrgan) {
+      scanImages.push({
+        imageUrl: activeSection.imagePreview,
+        organ: activeSection.reportOrgan,
+        findings:
+          activeSection.detectedOrgans.length > 0
+            ? activeSection.detectedOrgans
+                .map((o) => `${o.name} (${(o.confidence * 100).toFixed(1)}%)`)
+                .join(', ')
+            : 'No findings available',
+      });
     }
 
-    // Simulate report generation with form data
-    setTimeout(() => {
-      this.reportText = this.mockGenerateReport(patientInfo, this.reportNotes);
-      this.isReportGenerated = true;
-      this.isLoading = false;
-      this.showReportDialog = false;
+    // Generate the report text
+    this.reportText = this.mockGenerateReport(
+      patientInfo,
+      scanImages,
+      this.diagnosticName,
+      this.instructions,
+      this.conditionDetails,
+      this.reportNotes
+    );
 
-      // Reset form fields
-      this.reportNotes = '';
-      this.selectedPatientId = '';
-    }, 1000);
+    // Save the patient report to the database
+    this.reportService.savePatientReport({
+      patient: this.selectedPatientId,
+      scanImages: scanImages,
+      diagnosticName: this.diagnosticName,
+      instructions: this.instructions,
+      conditionDetails: this.conditionDetails,
+      additionalNotes: this.reportNotes,
+      reportText: this.reportText
+    }).subscribe(
+      (report) => {
+        console.log('Patient report saved:', report);
+        this.isReportGenerated = true;
+        this.isLoading = false;
+        this.showReportDialog = false;
+
+        // Reset form fields
+        this.reportNotes = '';
+        this.diagnosticName = '';
+        this.instructions = '';
+        this.conditionDetails = '';
+        this.selectedPatientId = '';
+        this.selectedPatient = null;
+      },
+      (error) => {
+        console.error('Error saving patient report:', error);
+        this.isLoading = false;
+        alert('Error saving patient report. Please try again.');
+      }
+    );
   }
 
   resetForm(sectionIndex: number = 0): void {
@@ -189,7 +308,8 @@ export class ScansComponent implements OnInit {
         predictionResult: null,
         predictionSuccess: null,
         userPrediction: '',
-        detectedOrgans: []
+        detectedOrgans: [],
+        reportOrgan: '',
       };
       this.reportText = '';
       this.isReportGenerated = false;
@@ -198,8 +318,10 @@ export class ScansComponent implements OnInit {
 
   // Add a new scan section
   addScanSection(): void {
-    const newId = this.scanSections.length > 0 ?
-      Math.max(...this.scanSections.map(s => s.id)) + 1 : 1;
+    const newId =
+      this.scanSections.length > 0
+        ? Math.max(...this.scanSections.map((s) => s.id)) + 1
+        : 1;
 
     this.scanSections.push({
       id: newId,
@@ -208,21 +330,27 @@ export class ScansComponent implements OnInit {
       predictionResult: null,
       predictionSuccess: null,
       detectedOrgans: [],
-      userPrediction: ''
+      userPrediction: '',
+      reportOrgan: '',
     });
   }
 
   // Remove a scan section
   removeScanSection(sectionIndex: number): void {
-    if (this.scanSections.length > 1 && sectionIndex >= 0 && sectionIndex < this.scanSections.length) {
+    if (
+      this.scanSections.length > 1 &&
+      sectionIndex >= 0 &&
+      sectionIndex < this.scanSections.length
+    ) {
       this.scanSections.splice(sectionIndex, 1);
     }
   }
 
   // Check if there are any completed scans
   hasCompletedScans(): boolean {
-    return this.scanSections.some(section =>
-      section.predictionResult && section.userPrediction);
+    return this.scanSections.some(
+      (section) => section.predictionResult && section.userPrediction
+    );
   }
 
   // End session and save all results at once
@@ -230,9 +358,12 @@ export class ScansComponent implements OnInit {
     this.isLoading = true;
 
     // Get all completed sections
-    const completedSections = this.scanSections.filter(s =>
-      s.predictionResult && s.userPrediction);
-    const correctSections = completedSections.filter(s => s.predictionSuccess);
+    const completedSections = this.scanSections.filter(
+      (s) => s.predictionResult && s.userPrediction
+    );
+    const correctSections = completedSections.filter(
+      (s) => s.predictionSuccess
+    );
 
     if (completedSections.length === 0) {
       this.isLoading = false;
@@ -243,78 +374,128 @@ export class ScansComponent implements OnInit {
     const sessionEndTime = new Date();
 
     // Prepare scan sections data
-    const scanSectionsData: ScanSection[] = completedSections.map(s => ({
+    const scanSectionsData: ScanSection[] = completedSections.map((s) => ({
       imageUrl: s.imagePreview || '',
       userPrediction: s.userPrediction,
       correctOrgan: s.predictionResult || '',
-      isCorrect: s.predictionSuccess || false
+      isCorrect: s.predictionSuccess || false,
     }));
 
     // Save all scan results at once
-    this.scanService.saveScanResult({
-      scanSections: scanSectionsData,
-      totalScans: completedSections.length,
-      correctScans: correctSections.length,
-      startTime: this.sessionStartTime,
-      endTime: sessionEndTime
-    }).subscribe(result => {
-      console.log('Scan session saved:', result);
-      this.isLoading = false;
+    this.scanService
+      .saveScanResult({
+        scanSections: scanSectionsData,
+        totalScans: completedSections.length,
+        correctScans: correctSections.length,
+        startTime: this.sessionStartTime,
+        endTime: sessionEndTime,
+      })
+      .subscribe(
+        (result) => {
+          console.log('Scan session saved:', result);
+          this.isLoading = false;
 
-      // Show success message (could be enhanced with a proper notification system)
-      alert('Session saved successfully!');
+          // Show success message (could be enhanced with a proper notification system)
+          alert('Session saved successfully!');
 
-      // Reset all scan sections to start a new session
-      this.scanSections = [];
-      this.addScanSection();
-    }, error => {
-      console.error('Error saving scan session:', error);
-      this.isLoading = false;
-      alert('Error saving session. Please try again.');
-    });
+          // Reset all scan sections to start a new session
+          this.scanSections = [];
+          this.addScanSection();
+        },
+        (error) => {
+          console.error('Error saving scan session:', error);
+          this.isLoading = false;
+          alert('Error saving session. Please try again.');
+        }
+      );
   }
 
   // Mock functions to simulate backend responses
   private mockGetCorrectOrgan(): string {
-    const organs = ['Liver', 'Kidney', 'Spleen', 'Gallbladder', 'Bladder', 'Bowel'];
+    const organs = [
+      'Liver',
+      'Kidney',
+      'Spleen',
+      'Gallbladder',
+      'Bladder',
+      'Bowel',
+    ];
     return organs[Math.floor(Math.random() * organs.length)];
   }
 
-  private mockDetectOrgans(): { name: string, confidence: number }[] {
+  private mockDetectOrgans(): { name: string; confidence: number }[] {
     const organs = [
       { name: 'Liver', confidence: Math.random() * 0.3 + 0.7 },
       { name: 'Kidney', confidence: Math.random() * 0.5 + 0.3 },
       { name: 'Spleen', confidence: Math.random() * 0.4 + 0.5 },
-      { name: 'Gallbladder', confidence: Math.random() * 0.6 + 0.2 }
+      { name: 'Gallbladder', confidence: Math.random() * 0.6 + 0.2 },
     ];
 
     // Sort by confidence level (highest first)
     return organs.sort((a, b) => b.confidence - a.confidence);
   }
 
-  private mockGenerateReport(patientName: string = '', notes: string = ''): string {
+  private mockGenerateReport(
+    patient: {
+      name: string;
+      age: string;
+      gender: string;
+      email: string;
+      phone: string;
+    },
+    scanImages: ScanImage[],
+    diagnosticName: string = '',
+    instructions: string = '',
+    conditionDetails: string = '',
+    notes: string = ''
+  ): string {
     const date = new Date().toLocaleDateString();
     const time = new Date().toLocaleTimeString();
-    const patientInfo = patientName ? `Patient: ${patientName}` : '';
-    const additionalNotes = notes ? `
-ADDITIONAL NOTES:
-${notes}` : '';
 
-    return `ULTRASOUND SCAN REPORT
+    // Patient information section
+    const patientInfo = `PATIENT INFORMATION:
+Name: ${patient.name}
+Age: ${patient.age}
+Gender: ${patient.gender}
+Email: ${patient.email}
+Phone: ${patient.phone}`;
+
+    // Scan findings section
+    let findingsText = 'SCAN FINDINGS:';
+    if (scanImages.length > 0) {
+      scanImages.forEach((scan, index) => {
+        findingsText += `\n\nScan #${index + 1} - ${scan.organ}:\n${
+          scan.findings
+        }`;
+      });
+    } else {
+      findingsText += '\n\nNo scan images available.';
+    }
+
+    // Diagnostic section
+    const diagnosticText = diagnosticName
+      ? `\n\nDIAGNOSIS:\n${diagnosticName}`
+      : '';
+
+    // Condition details section
+    const conditionText = conditionDetails
+      ? `\n\nCONDITION DETAILS:\n${conditionDetails}`
+      : '';
+
+    // Instructions section
+    const instructionsText = instructions
+      ? `\n\nINSTRUCTIONS:\n${instructions}`
+      : '';
+
+    // Additional notes section
+    const additionalNotes = notes ? `\n\nADDITIONAL NOTES:\n${notes}` : '';
+
+    return `PATIENT ULTRASOUND REPORT
 Date: ${date}
 Time: ${time}
+
 ${patientInfo}
 
-FINDINGS:
-The ultrasound scan shows normal liver parenchyma with no focal lesions. The liver measures within normal limits. No intrahepatic biliary dilatation is seen.
-
-The gallbladder is normal in size with no stones or wall thickening.
-
-Both kidneys appear normal in size and echogenicity. No hydronephrosis or renal calculi are identified.
-
-The spleen is normal in size with homogeneous echotexture.
-
-IMPRESSION:
-Normal abdominal ultrasound study with no significant abnormalities detected.${additionalNotes}`;
+${findingsText}${diagnosticText}${conditionText}${instructionsText}${additionalNotes}`;
   }
 }
