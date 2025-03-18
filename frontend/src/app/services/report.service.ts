@@ -59,4 +59,24 @@ export class ReportService {
       })
     );
   }
+
+  updatePatientReport(id: string, reportData: Partial<PatientReport>): Observable<PatientReport> {
+    return this.http.put<any>(`${this.apiUrl}/${id}`, reportData).pipe(
+      map(response => response.data),
+      catchError(error => {
+        console.error('Error updating patient report:', error);
+        return of(null as any);
+      })
+    );
+  }
+
+  deletePatientReport(id: string): Observable<boolean> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
+      map(response => response.success),
+      catchError(error => {
+        console.error('Error deleting patient report:', error);
+        return of(false);
+      })
+    );
+  }
 }

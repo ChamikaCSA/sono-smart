@@ -6,14 +6,18 @@ const Patient = require('../models/Patient');
 // @access  Private
 const savePatientReport = async (req, res) => {
   try {
-    const { patient, scanImages, reportText } = req.body;
+    const { patient, scanImages, reportText, diagnosticName, instructions, conditionDetails, additionalNotes } = req.body;
 
     // Create patient report
     const patientReport = await PatientReport.create({
       user: req.user.id,
       patient,
       scanImages,
-      reportText
+      reportText,
+      diagnosticName,
+      instructions,
+      conditionDetails,
+      additionalNotes
     });
 
     res.status(201).json({

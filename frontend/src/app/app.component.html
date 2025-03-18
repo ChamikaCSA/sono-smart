@@ -22,7 +22,7 @@
             <a routerLink="qa" routerLinkActive="active">QA</a>
           </ng-container>
           <a routerLink="scans" routerLinkActive="active">Scans</a>
-          <a href="#">Reports</a>
+          <a routerLink="reports" routerLinkActive="active">Reports</a>
           <div class="user-menu">
             <div class="user-avatar" [title]="authService.getCurrentUser()?.firstName || 'User'">
               {{ (authService.getCurrentUser()?.firstName || 'U')[0] }}

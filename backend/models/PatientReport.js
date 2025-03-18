@@ -27,6 +27,22 @@ const PatientReportSchema = new mongoose.Schema({
       }
     }
   ],
+  diagnosticName: {
+    type: String,
+    required: [true, 'Diagnostic name is required']
+  },
+  instructions: {
+    type: String,
+    default: ''
+  },
+  conditionDetails: {
+    type: String,
+    default: ''
+  },
+  additionalNotes: {
+    type: String,
+    default: ''
+  },
   reportText: {
     type: String,
     required: [true, 'Report text is required']
