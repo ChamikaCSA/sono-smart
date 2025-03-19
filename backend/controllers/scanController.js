@@ -1,5 +1,7 @@
 const ScanResult = require('../models/ScanResult');
 const User = require('../models/User');
+const { spawn } = require('child_process');
+const path = require('path');
 
 // @desc    Save scan result
 // @route   POST /api/scan/results
@@ -100,8 +102,86 @@ const getScanResult = async (req, res) => {
   }
 };
 
+// @desc    Detect organs in ultrasound image
+// @route   POST /api/scan/detect-organs
+// @access  Private
+const detectOrgans = async (req, res) => {
+  try {
+    const { imageData } = req.body;
+
+    if (!imageData) {
+      return res.status(400).json({
+        success: false,
+        message: 'Image data is required'
+      });
+    }
+
+    // Path to the Python script
+    const scriptPath = path.join(__dirname, '..', 'utils', 'organDetection.py');
+
+    // Spawn Python process
+    const pythonProcess = spawn('python3', [scriptPath]);
+
+    let result = '';
+    let errorOutput = '';
+
+    // Collect data from script
+    pythonProcess.stdout.on('data', (data) => {
+      result += data.toString();
+    });
+
+    // Collect error data
+    pythonProcess.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    // Handle process completion
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error(`Python process exited with code ${code}`);
+        console.error(`Error output: ${errorOutput}`);
+        return res.status(500).json({
+          success: false,
+          message: 'Error processing image',
+          error: errorOutput
+        });
+      }
+
+      try {
+        // Parse the JSON result from the Python script
+        const detectionResult = JSON.parse(result);
+
+        res.status(200).json({
+          success: true,
+          data: detectionResult
+        });
+      } catch (parseError) {
+        console.error('Error parsing Python script output:', parseError);
+        res.status(500).json({
+          success: false,
+          message: 'Error parsing detection results',
+          error: parseError.message
+        });
+      }
+    });
+
+    // Send the image data to the Python script
+    pythonProcess.stdin.write(imageData);
+    pythonProcess.stdin.end();
+
+  } catch (error) {
+    console.error('Error detecting organs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while detecting organs',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   saveScanResult,
   getScanResults,
-  getScanResult
+  getScanResult,
+  detectOrgans
 };

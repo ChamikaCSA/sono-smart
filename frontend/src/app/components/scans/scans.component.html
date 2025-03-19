@@ -135,14 +135,10 @@
           </div>
 
           <div class="results-container" *ngIf="section.detectedOrgans.length > 0">
-            <h3>Detection Results</h3>
+            <h3>Detection Result</h3>
             <div class="organs-list">
-              <div class="organ-item" *ngFor="let organ of section.detectedOrgans">
-                <div class="organ-name">{{ organ.name }}</div>
-                <div class="confidence-bar-container">
-                  <div class="confidence-bar" [style.width.%]="organ.confidence * 100"></div>
-                  <span class="confidence-value">{{ (organ.confidence * 100).toFixed(1) }}%</span>
-                </div>
+              <div class="organ-item">
+                <div class="organ-name">{{ section.detectedOrgans[0].name }}</div>
               </div>
             </div>
 
@@ -152,15 +148,6 @@
                 <pre>{{ reportText }}</pre>
               </div>
               <div class="report-actions">
-                <button class="btn-secondary">
-                  <span class="material-icons-outlined">print</span> Print
-                </button>
-                <button class="btn-primary">
-                  <span class="material-icons-outlined">save</span> Save to Patient Record
-                </button>
-              </div>
-              <div class="report-saved-message">
-                <p><span class="material-icons-outlined">check_circle</span> Patient report has been saved to the database</p>
               </div>
             </div>
           </div>

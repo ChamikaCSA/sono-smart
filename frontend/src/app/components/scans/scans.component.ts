@@ -144,16 +144,32 @@ export class ScansComponent implements OnInit {
 
   submitForProfessional(sectionIndex: number = 0): void {
     const section = this.scanSections[sectionIndex];
-    if (!section || !section.selectedFile) return;
+    if (!section || !section.selectedFile || !section.imagePreview) return;
 
     this.isLoading = true;
 
-    // Simulate API call for professional organ detection
-    setTimeout(() => {
-      // Mock response - in a real app, this would come from the backend
-      section.detectedOrgans = this.mockDetectOrgans();
-      this.isLoading = false;
-    }, 1500);
+    // Extract the base64 image data from the image preview
+    const imageData = section.imagePreview.split(',')[1];
+
+    // Call the real organ detection API
+    this.scanService.detectOrgans(imageData).subscribe({
+      next: (result) => {
+        if (result && result.detectedOrgan && result.detectedOrgan !== 'No Detection') {
+          // Convert single organ name to the array format for backward compatibility
+          section.detectedOrgans = [{ name: result.detectedOrgan, confidence: 1.0 }];
+        } else {
+          section.detectedOrgans = [];
+          console.error('No organs detected or invalid response format');
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error detecting organs:', error);
+        // Fallback to mock data in case of error
+        section.detectedOrgans = this.mockDetectOrgans();
+        this.isLoading = false;
+      }
+    });
   }
 
   // Dialog properties

@@ -60,4 +60,14 @@ export class ScanService {
       })
     );
   }
+
+  detectOrgans(imageData: string): Observable<{detectedOrgan: string}> {
+    return this.http.post<any>(`${this.apiUrl}/detect-organs`, { imageData }).pipe(
+      map(response => response.data),
+      catchError(error => {
+        console.error('Error detecting organs:', error);
+        return of({ detectedOrgan: 'No Detection' });
+      })
+    );
+  }
 }
