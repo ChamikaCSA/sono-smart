@@ -43,10 +43,6 @@ const PatientReportSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  reportText: {
-    type: String,
-    required: [true, 'Report text is required']
-  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -13,8 +13,8 @@ export interface Patient {
   phone?: string;
   address?: string;
   medicalHistory?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   __v?: number;
 }
 

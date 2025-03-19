@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
-import { ReportService, PatientReport } from '../../services/report.service';
+import { ReportService, PatientReportWithPatient } from '../../services/report.service';
 import { QuizService, QuizResult } from '../../services/quiz.service';
 import { ScanService, ScanResult } from '../../services/scan.service';
+import { PdfService } from '../../services/pdf.service';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { PatientService } from 'src/app/services/patient.service';
 
 @Component({
   selector: 'app-reports',
@@ -22,13 +24,13 @@ import { trigger, transition, style, animate } from '@angular/animations';
   ]
 })
 export class ReportsComponent implements OnInit {
-  patientReports: PatientReport[] = [];
+  patientReports: PatientReportWithPatient[] = [];
   quizResults: QuizResult[] = [];
   scanResults: ScanResult[] = [];
   isLoading = true;
   errorMessage = '';
-  selectedReport: PatientReport | null = null;
-  currentReport: Partial<PatientReport> = {};
+  selectedReport: PatientReportWithPatient | null = null;
+  currentReport: Partial<PatientReportWithPatient> = {};
   showDetailsModal = false;
   showDeleteModal = false;
   showForm = false;
@@ -38,7 +40,9 @@ export class ReportsComponent implements OnInit {
     public authService: AuthService,
     private reportService: ReportService,
     private quizService: QuizService,
-    private scanService: ScanService
+    private scanService: ScanService,
+    private pdfService: PdfService,
+    private patientService: PatientService
   ) {}
 
   ngOnInit(): void {
@@ -57,8 +61,21 @@ export class ReportsComponent implements OnInit {
 
   loadPatientReports(): void {
     this.reportService.getPatientReports().subscribe({
-      next: (reports) => {
-        this.patientReports = reports;
+      next: async (reports) => {
+        // For each report, fetch the patient details if patient is just an ID
+        const reportsWithPatients = await Promise.all(reports.map(async (report) => {
+          if (typeof report.patient === 'string') {
+            try {
+              const patient = await this.patientService.getPatient(report.patient).toPromise();
+              return { ...report, patient: patient || report.patient };
+            } catch (error) {
+              console.error('Error loading patient details:', error);
+              return report;
+            }
+          }
+          return report;
+        }));
+        this.patientReports = reportsWithPatients;
         this.isLoading = false;
       },
       error: (error) => {
@@ -131,19 +148,19 @@ export class ReportsComponent implements OnInit {
   }
 
   // Action button functionality
-  viewReport(report: PatientReport): void {
+  viewReport(report: PatientReportWithPatient): void {
     this.selectedReport = report;
     this.showDetailsModal = true;
   }
 
-  editReport(report: PatientReport): void {
+  editReport(report: PatientReportWithPatient): void {
     this.currentReport = { ...report };
     this.isEditing = true;
     this.showForm = true;
     this.showDetailsModal = false;
   }
 
-  confirmDelete(report: PatientReport): void {
+  confirmDelete(report: PatientReportWithPatient): void {
     this.selectedReport = report;
     this.showDeleteModal = true;
   }
@@ -178,5 +195,81 @@ export class ReportsComponent implements OnInit {
       this.showDetailsModal = false;
       this.showDeleteModal = false;
     }
+  }
+
+  /**
+   * Generates a PDF report for the selected patient report
+   * @param report The patient report to generate a PDF for
+   */
+  async generatePdf(report: PatientReportWithPatient): Promise<void> {
+    if (!report) return;
+
+    this.isLoading = true;
+
+    try {
+      // Get patient details
+      await this.reportService.getPatientReport(report._id as string).subscribe({
+        next: async (fullReport) => {
+          if (!fullReport) {
+            this.errorMessage = 'Failed to load report details for PDF generation.';
+            this.isLoading = false;
+            return;
+          }
+
+          // Fetch complete patient data
+          const patientId = typeof fullReport.patient === 'string' ? fullReport.patient : (fullReport.patient as any)._id;
+          this.patientService.getPatient(patientId).subscribe({
+            next: async (patient) => {
+              if (!patient) {
+                this.errorMessage = 'Failed to load patient details for PDF generation.';
+                this.isLoading = false;
+                return;
+              }
+
+              // Generate the PDF
+              await this.pdfService.generatePdfReport(fullReport, patient);
+              this.isLoading = false;
+            },
+            error: (error) => {
+              console.error('Error loading patient details for PDF generation:', error);
+              this.errorMessage = 'Failed to generate PDF. Please try again.';
+              this.isLoading = false;
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error loading report for PDF generation:', error);
+          this.errorMessage = 'Failed to generate PDF. Please try again.';
+          this.isLoading = false;
+        }
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      this.errorMessage = 'Failed to generate PDF. Please try again.';
+      this.isLoading = false;
+    }
+  }
+
+  /**
+   * Calculates age from date of birth
+   * @param dateOfBirth Date of birth string
+   * @returns Age as a string (e.g., "21 Years")
+   */
+  private calculateAge(dateOfBirth: string): string {
+    if (!dateOfBirth) return 'N/A';
+
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+
+    // Adjust age if birthday hasn't occurred yet this year
+    if (
+      today.getMonth() < dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
+    ) {
+      age--;
+    }
+
+    return `${age} Years`;
   }
 }

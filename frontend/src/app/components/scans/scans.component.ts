@@ -71,7 +71,6 @@ export class ScansComponent implements OnInit {
   }
 
   // For professionals
-  reportText: string = '';
   isReportGenerated: boolean = false;
 
   // For patient selection
@@ -108,7 +107,6 @@ export class ScansComponent implements OnInit {
       this.scanSections[sectionIndex].predictionSuccess = null;
       this.scanSections[sectionIndex].detectedOrgans = [];
       this.isReportGenerated = false;
-      this.reportText = '';
     }
   }
 
@@ -125,21 +123,31 @@ export class ScansComponent implements OnInit {
 
   submitForTrainee(sectionIndex: number = 0): void {
     const section = this.scanSections[sectionIndex];
-    if (!section || !section.selectedFile || !section.userPrediction) return;
+    if (!section || !section.selectedFile || !section.imagePreview || !section.userPrediction) return;
 
     this.isLoading = true;
 
-    // Simulate API call for trainee prediction verification
-    setTimeout(() => {
-      // Mock response - in a real app, this would come from the backend
-      const correctOrgan = this.mockGetCorrectOrgan();
-      section.predictionSuccess =
-        section.userPrediction.toLowerCase() === correctOrgan.toLowerCase();
-      section.predictionResult = correctOrgan;
-      this.isLoading = false;
+    // Extract the base64 image data from the image preview
+    const imageData = section.imagePreview.split(',')[1];
 
-      // No longer saving individual results - will save all at once with End Session button
-    }, 1500);
+    // Call the real organ detection API
+    this.scanService.detectOrgans(imageData).subscribe({
+      next: (result) => {
+        if (result && result.detectedOrgan && result.detectedOrgan !== 'No Detection') {
+          section.predictionResult = result.detectedOrgan;
+          section.predictionSuccess = section.userPrediction.toLowerCase() === result.detectedOrgan.toLowerCase();
+        } else {
+          console.error('No organs detected or invalid response format');
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error detecting organs:', error);
+        section.predictionResult = 'Error detecting organ';
+        section.predictionSuccess = false;
+        this.isLoading = false;
+      }
+    });
   }
 
   submitForProfessional(sectionIndex: number = 0): void {
@@ -165,8 +173,7 @@ export class ScansComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error detecting organs:', error);
-        // Fallback to mock data in case of error
-        section.detectedOrgans = this.mockDetectOrgans();
+        section.detectedOrgans = [];
         this.isLoading = false;
       }
     });
@@ -273,16 +280,6 @@ export class ScansComponent implements OnInit {
       });
     }
 
-    // Generate the report text
-    this.reportText = this.mockGenerateReport(
-      patientInfo,
-      scanImages,
-      this.diagnosticName,
-      this.instructions,
-      this.conditionDetails,
-      this.reportNotes
-    );
-
     // Save the patient report to the database
     this.reportService.savePatientReport({
       patient: this.selectedPatientId,
@@ -291,7 +288,6 @@ export class ScansComponent implements OnInit {
       instructions: this.instructions,
       conditionDetails: this.conditionDetails,
       additionalNotes: this.reportNotes,
-      reportText: this.reportText
     }).subscribe(
       (report) => {
         console.log('Patient report saved:', report);
@@ -327,7 +323,6 @@ export class ScansComponent implements OnInit {
         detectedOrgans: [],
         reportOrgan: '',
       };
-      this.reportText = '';
       this.isReportGenerated = false;
     }
   }
@@ -424,94 +419,5 @@ export class ScansComponent implements OnInit {
           alert('Error saving session. Please try again.');
         }
       );
-  }
-
-  // Mock functions to simulate backend responses
-  private mockGetCorrectOrgan(): string {
-    const organs = [
-      'Liver',
-      'Kidney',
-      'Spleen',
-      'Gallbladder',
-      'Bladder',
-      'Bowel',
-    ];
-    return organs[Math.floor(Math.random() * organs.length)];
-  }
-
-  private mockDetectOrgans(): { name: string; confidence: number }[] {
-    const organs = [
-      { name: 'Liver', confidence: Math.random() * 0.3 + 0.7 },
-      { name: 'Kidney', confidence: Math.random() * 0.5 + 0.3 },
-      { name: 'Spleen', confidence: Math.random() * 0.4 + 0.5 },
-      { name: 'Gallbladder', confidence: Math.random() * 0.6 + 0.2 },
-    ];
-
-    // Sort by confidence level (highest first)
-    return organs.sort((a, b) => b.confidence - a.confidence);
-  }
-
-  private mockGenerateReport(
-    patient: {
-      name: string;
-      age: string;
-      gender: string;
-      email: string;
-      phone: string;
-    },
-    scanImages: ScanImage[],
-    diagnosticName: string = '',
-    instructions: string = '',
-    conditionDetails: string = '',
-    notes: string = ''
-  ): string {
-    const date = new Date().toLocaleDateString();
-    const time = new Date().toLocaleTimeString();
-
-    // Patient information section
-    const patientInfo = `PATIENT INFORMATION:
-Name: ${patient.name}
-Age: ${patient.age}
-Gender: ${patient.gender}
-Email: ${patient.email}
-Phone: ${patient.phone}`;
-
-    // Scan findings section
-    let findingsText = 'SCAN FINDINGS:';
-    if (scanImages.length > 0) {
-      scanImages.forEach((scan, index) => {
-        findingsText += `\n\nScan #${index + 1} - ${scan.organ}:\n${
-          scan.findings
-        }`;
-      });
-    } else {
-      findingsText += '\n\nNo scan images available.';
-    }
-
-    // Diagnostic section
-    const diagnosticText = diagnosticName
-      ? `\n\nDIAGNOSIS:\n${diagnosticName}`
-      : '';
-
-    // Condition details section
-    const conditionText = conditionDetails
-      ? `\n\nCONDITION DETAILS:\n${conditionDetails}`
-      : '';
-
-    // Instructions section
-    const instructionsText = instructions
-      ? `\n\nINSTRUCTIONS:\n${instructions}`
-      : '';
-
-    // Additional notes section
-    const additionalNotes = notes ? `\n\nADDITIONAL NOTES:\n${notes}` : '';
-
-    return `PATIENT ULTRASOUND REPORT
-Date: ${date}
-Time: ${time}
-
-${patientInfo}
-
-${findingsText}${diagnosticText}${conditionText}${instructionsText}${additionalNotes}`;
   }
 }

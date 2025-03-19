@@ -149,18 +149,6 @@
   font-size: 0.9rem;
 }
 
-/* Report Text Cell */
-.report-text-cell {
-  max-width: 300px;
-}
-
-.report-text-preview {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
 /* Actions Cell */
 .actions-cell {
   white-space: nowrap;
@@ -346,10 +334,6 @@
   color: var(--text-secondary);
 }
 
-.report-text {
-  white-space: pre-line;
-}
-
 .scan-images {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -373,4 +357,9 @@
   padding: 0.75rem;
   background-color: var(--surface-2);
   font-size: 0.9rem;
+}
+
+.pdf-btn {
+  background-color: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary-color);
 }

@@ -6,14 +6,13 @@ const Patient = require('../models/Patient');
 // @access  Private
 const savePatientReport = async (req, res) => {
   try {
-    const { patient, scanImages, reportText, diagnosticName, instructions, conditionDetails, additionalNotes } = req.body;
+    const { patient, scanImages, diagnosticName, instructions, conditionDetails, additionalNotes } = req.body;
 
     // Create patient report
     const patientReport = await PatientReport.create({
       user: req.user.id,
       patient,
       scanImages,
-      reportText,
       diagnosticName,
       instructions,
       conditionDetails,
@@ -40,7 +39,7 @@ const savePatientReport = async (req, res) => {
 const getPatientReports = async (req, res) => {
   try {
     const patientReports = await PatientReport.find({ user: req.user.id })
-      .populate('patient', 'firstName lastName dateOfBirth gender')
+      .populate('patient', 'firstName lastName dateOfBirth gender email phone address createdAt')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -64,7 +63,7 @@ const getPatientReports = async (req, res) => {
 const getPatientReport = async (req, res) => {
   try {
     const patientReport = await PatientReport.findById(req.params.id)
-      .populate('patient', 'firstName lastName dateOfBirth gender email phone address');
+      .populate('patient', 'firstName lastName dateOfBirth gender email phone address createdAt');
 
     if (!patientReport) {
       return res.status(404).json({

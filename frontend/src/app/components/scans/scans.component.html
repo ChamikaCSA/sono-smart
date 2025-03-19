@@ -39,7 +39,6 @@
           </div>
           <div class="controls" *ngIf="section.imagePreview">
             <button class="btn-secondary" (click)="resetForm(i)">Reset</button>
-            <button class="btn-primary" (click)="fileInput.click()">Change Image</button>
           </div>
         </div>
 
@@ -118,7 +117,6 @@
           </div>
           <div class="controls" *ngIf="section.imagePreview">
             <button class="btn-secondary" (click)="resetForm(i)">Reset</button>
-            <button class="btn-primary" (click)="fileInput.click()">Change Image</button>
           </div>
         </div>
 
@@ -139,15 +137,6 @@
             <div class="organs-list">
               <div class="organ-item">
                 <div class="organ-name">{{ section.detectedOrgans[0].name }}</div>
-              </div>
-            </div>
-
-            <div class="report-container" *ngIf="isReportGenerated">
-              <h3>Patient Report</h3>
-              <div class="report-content">
-                <pre>{{ reportText }}</pre>
-              </div>
-              <div class="report-actions">
               </div>
             </div>
           </div>
