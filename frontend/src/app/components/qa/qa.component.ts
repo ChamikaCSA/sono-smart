@@ -31,39 +31,45 @@ export class QaComponent implements OnInit, OnDestroy {
   quizStartTime: Date | null = null;
   quizEndTime: Date | null = null;
 
+  private getRandomImage(organ: string): string {
+    const imageNumbers = Array.from({length: 60}, (_, i) => (i + 1).toString().padStart(4, '0'));
+    const randomIndex = Math.floor(Math.random() * imageNumbers.length);
+    return `/qa/${organ}/${organ}-${imageNumbers[randomIndex]}.png`;
+  }
+
   questions: Question[] = [
     {
       id: 1,
       text: 'Which organ is shown in this ultrasound image?',
-      imageUrl: 'assets/images/qa/liver.jpg',
+      imageUrl: this.getRandomImage('liver'),
       options: ['Kidney', 'Liver', 'Spleen', 'Gallbladder'],
       correctAnswer: 1
     },
     {
       id: 2,
       text: 'Identify the organ in this ultrasound scan:',
-      imageUrl: 'assets/images/qa/kidney.jpg',
+      imageUrl: this.getRandomImage('kidney'),
       options: ['Liver', 'Bladder', 'Kidney', 'Bowel'],
       correctAnswer: 2
     },
     {
       id: 3,
       text: 'What organ is being visualized in this image?',
-      imageUrl: 'assets/images/qa/gallbladder.jpg',
+      imageUrl: this.getRandomImage('gallbladder'),
       options: ['Gallbladder', 'Spleen', 'Bladder', 'Liver'],
       correctAnswer: 0
     },
     {
       id: 4,
       text: 'Identify the correct organ shown in this ultrasound:',
-      imageUrl: 'assets/images/qa/spleen.jpg',
+      imageUrl: this.getRandomImage('spleen'),
       options: ['Liver', 'Kidney', 'Bowel', 'Spleen'],
       correctAnswer: 3
     },
     {
       id: 5,
       text: 'Which abdominal organ is displayed in this image?',
-      imageUrl: 'assets/images/qa/bladder.jpg',
+      imageUrl: this.getRandomImage('bladder'),
       options: ['Bowel', 'Bladder', 'Gallbladder', 'Kidney'],
       correctAnswer: 1
     }
