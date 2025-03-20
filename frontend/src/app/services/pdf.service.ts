@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Patient } from './patient.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PdfService {
   constructor() {}
@@ -15,122 +15,214 @@ export class PdfService {
    * @param patient The patient information
    * @returns Promise that resolves when PDF generation is complete
    */
-  async generatePdfReport(report: PatientReportWithPatient, patient: Patient): Promise<void> {
+  async generatePdfReport(
+    report: PatientReportWithPatient,
+    patient: Patient
+  ): Promise<void> {
     // Create a new PDF document
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 10;
-    let yPos = margin;
+    const margin = 12;
+    const contentWidth = pageWidth - margin * 2;
+    let yPosition = 15;
 
-    // Add header with logo
-    this.addHeader(doc, pageWidth, margin, yPos);
-    yPos += 30;
+    // Define color scheme for consistent branding with proper tuple types
+    const colors: {
+      primary: [number, number, number];
+      secondary: [number, number, number];
+      accent: [number, number, number];
+      text: [number, number, number];
+      textLight: [number, number, number];
+      background: [number, number, number];
+      surface1: [number, number, number];
+      surface2: [number, number, number];
+      border: [number, number, number];
+    } = {
+      primary: [63, 81, 181], // From --primary-rgb
+      secondary: [255, 64, 129], // From --secondary-color (#ff4081)
+      accent: [59, 130, 246], // From --info-rgb
+      text: [44, 62, 80], // From --text-primary (#2c3e50)
+      textLight: [102, 102, 102], // From --text-secondary (#666)
+      background: [248, 250, 252], // From --light-bg (#f8fafc)
+      surface1: [245, 247, 250], // From --surface-1 (#f5f7fa)
+      surface2: [237, 242, 247], // From --surface-2 (#edf2f7)
+      border: [226, 232, 240], // From --border-color (#e2e8f0)
+    };
 
-    // Add patient information
-    this.addPatientInfo(doc, patient, pageWidth, margin, yPos);
-    yPos += 40;
+    // Function to add header to each page
+    const addPageHeader = () => {
+      // Header background
+      doc.setFillColor(...colors.primary);
+      doc.rect(0, 0, pageWidth, 25, 'F');
 
-    // Add report title - determine from scan images if available
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    let reportTitle = 'ULTRASOUND REPORT';
+      // Add logo image
+      const logoPath = 'logo.png';
+      const logoWidth = 10;
+      const logoHeight = 10;
+      doc.addImage(logoPath, 'PNG', margin, 7, logoWidth, logoHeight);
 
-    // Try to determine report type from scan images
-    if (report.scanImages && report.scanImages.length > 0) {
-      const organs = report.scanImages.map(img => img.organ.toUpperCase()).filter(Boolean);
-      if (organs.length > 0) {
-        // Get unique organs
-        const uniqueOrgans = [...new Set(organs)];
-        if (uniqueOrgans.length === 1) {
-          reportTitle = `ULTRASOUND ${uniqueOrgans[0]}`;
-        } else if (uniqueOrgans.length <= 3) {
-          reportTitle = `ULTRASOUND ${uniqueOrgans.join(' & ')}`;
-        }
+      // Add SonoSmart text as logo
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SonoSmart', margin + 12, 13);
+
+      // Add subtext under logo
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Advanced Ultrasound Diagnostics', margin + 12, 20);
+
+      // Add contact information in header
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      const contactInfo = 'Email: contact@sonosmart.com | Phone: +1 (234) 567-890 | www.sonosmart.com';
+      const contactWidth = doc.getTextWidth(contactInfo);
+      doc.text(
+        contactInfo,
+        pageWidth - margin - contactWidth,
+        13
+      );
+    };
+
+    // Function to add footer to each page
+    const addPageFooter = (pageNumber: number) => {
+      const footerPosition = pageHeight - 10;
+
+      // Add decorative line above footer
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.5);
+      doc.line(
+        margin,
+        footerPosition - 8,
+        pageWidth - margin,
+        footerPosition - 8
+      );
+
+      // Footer text with generation timestamp on the same line
+      doc.setFontSize(8);
+      doc.setTextColor(...colors.textLight);
+      const generatedDate = new Date().toLocaleString();
+      doc.text(
+        `SonoSmart Medical Report - Confidential | Generated on: ${generatedDate}`,
+        margin,
+        footerPosition
+      );
+
+      // Page number
+      doc.text(
+        `Page ${pageNumber} of ${doc.internal.pages.length-1}`,
+        pageWidth - margin - 25,
+        footerPosition
+      );
+    };
+
+    // Add header to first page
+    addPageHeader();
+
+    // Helper function to create section headers with consistent styling
+    const addSectionHeader = (
+      title: string,
+      yPos: number,
+      fillColor: [number, number, number]
+    ) => {
+      // Section header background
+      doc.setFillColor(...fillColor);
+      doc.roundedRect(margin, yPos, contentWidth, 14, 2, 2, 'F');
+
+      // Section header text
+      doc.setTextColor(...colors.text);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, margin + 6, yPos + 10);
+
+      return yPos + 16; // Return new Y position after header
+    };
+
+    // Helper function to add field with label and value
+    const addField = (
+      label: string,
+      value: any,
+      x: number,
+      y: number,
+      maxWidth: number = contentWidth
+    ) => {
+      const labelWidth = 25; // Fixed width for all labels
+      const labelSpacing = 2; // Consistent spacing between label and value
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(...colors.text);
+      doc.text(label, x, y);
+
+      doc.setFont('helvetica', 'normal');
+      if (typeof value === 'string') {
+        const splitValue = doc.splitTextToSize(
+          value,
+          maxWidth - (labelWidth + labelSpacing)
+        );
+        doc.text(splitValue, x + labelWidth, y);
+        return splitValue.length > 1 ? y + splitValue.length * 5 : y;
+      } else {
+        doc.text('N/A', x + labelWidth, y);
+        return y;
       }
-    }
+    };
 
-    doc.text(reportTitle, pageWidth / 2, yPos, { align: 'center' });
-    yPos += 10;
+    // Add report title with decorative elements
+    yPosition = 35;
 
-    // Add impression
-    this.addImpression(doc, report, margin, yPos);
-    yPos += 20;
-
-    // Add advice
-    if (report.instructions) {
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('ADVICE', margin, yPos);
-      yPos += 6;
-      doc.setFont('helvetica', 'normal');
-      doc.text(report.instructions, margin, yPos);
-      yPos += 10;
-    }
-
-    // Add clinical correlation
-    if (report.conditionDetails) {
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CLINICAL CORRELATION', margin, yPos);
-      yPos += 6;
-      doc.setFont('helvetica', 'normal');
-      doc.text(report.conditionDetails, margin, yPos);
-      yPos += 20;
-    }
-
-    // Add scan images
-    if (report.scanImages && report.scanImages.length > 0) {
-      await this.addScanImages(doc, report.scanImages, pageWidth, margin, yPos);
-    }
-
-    // Add footer
-    this.addFooter(doc, pageWidth, pageHeight);
-
-    // Save the PDF
-    doc.save(`${patient.firstName.replace(/\s+/g, '_')}_report.pdf`);
-  }
-
-  private addHeader(doc: jsPDF, pageWidth: number, margin:number, yPos: number): void {
-    // Add logo
-    const logoUrl = 'assets/images/logo.png';
-    const img = new Image();
-    img.src = logoUrl;
-
-    // Add clinic name and info
+    doc.setTextColor(...colors.text);
     doc.setFontSize(16);
-    doc.setTextColor(0, 51, 153); // Dark blue color
     doc.setFont('helvetica', 'bold');
-    doc.text('DRLOGY IMAGING CENTER', 60, yPos + 10);
+    const reportTitle = 'Ultrasound Examination Report';
+    const titleWidth = doc.getTextWidth(reportTitle);
+    doc.text(reportTitle, (pageWidth - titleWidth) / 2, yPosition); // Center the title
 
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0); // Black color
-    doc.text('X-Ray | CT-Scan | MRI | USG', 60, yPos + 16);
-
-    // Add contact info
-    doc.setFontSize(9);
-    doc.text('01234-56789 | 0912-345678', pageWidth - margin, yPos + 6, { align: 'right' });
-    doc.text('drlogyimaging@drlogy.com', pageWidth - margin, yPos + 12, { align: 'right' });
-    doc.text('www.drlogy.com', pageWidth - margin, yPos + 18, { align: 'right' });
-
-    // Add address
+    // Add report date with styled box
+    yPosition += 8;
+    doc.setFillColor(...colors.surface2);
+    doc.roundedRect(margin, yPosition - 3, contentWidth, 6, 1, 1, 'F');
     doc.setFontSize(8);
-    doc.text('105-108, SMART VISION COMPLEX, HEALTHCARE ROAD, OPPOSITE HEALTHCARE COMPLEX, MUMBAI - 609578', pageWidth / 2, yPos + 24, { align: 'center' });
+    doc.setTextColor(...colors.textLight);
+    const reportDate = report.createdAt
+      ? new Date(report.createdAt).toLocaleDateString()
+      : new Date().toLocaleDateString();
+    doc.text(`Report Date: ${reportDate}`, margin + 5, yPosition + 2);
 
-    // Add horizontal line
-    doc.setDrawColor(51, 102, 204); // Blue color
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPos + 28, pageWidth - margin, yPos + 28);
-  }
+    // Add patient information section with improved styling
+    yPosition = addSectionHeader(
+      'Patient Information',
+      yPosition + 6,
+      colors.surface1
+    );
 
-  private addPatientInfo(doc: jsPDF, patientInfo: Patient, pageWidth: number, margin:number, yPos: number): void {
-    // Left column - Patient details
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${patientInfo.firstName} ${patientInfo.lastName}`, margin, yPos);
+    // Create a styled box for patient details
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.2);
+    doc.roundedRect(margin, yPosition, contentWidth, 24, 2, 2, 'FD');
 
-    // Calculate age from date of birth
-    const dob = new Date(patientInfo.dateOfBirth);
+    // Patient details with improved layout
+    const patientY = yPosition + 8;
+    doc.setFontSize(9);
+
+    // Left column
+    let leftX = margin + 5;
+    addField(
+      'Name:',
+      `${patient.firstName} ${patient.lastName}`,
+      leftX,
+      patientY
+    );
+    addField('Gender:', patient.gender, leftX, patientY + 6);
+    addField('Phone:', patient.phone || 'N/A', leftX, patientY + 12);
+
+    // Right column
+    let rightX = margin + contentWidth / 2;
+
+    // Calculate age
+    const dob = new Date(patient.dateOfBirth);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
     if (
@@ -140,197 +232,251 @@ export class PdfService {
       age--;
     }
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Age : ${age} Years`, margin, yPos + 8);
-    doc.text(`Sex : ${patientInfo.gender}`, margin, yPos + 16);
+    addField(
+      'DOB:',
+      new Date(patient.dateOfBirth).toLocaleDateString(),
+      rightX,
+      patientY
+    );
+    addField('Age:', `${age} years`, rightX, patientY + 6);
 
-    if (patientInfo.phone) {
-      doc.text(`Phone : ${patientInfo.phone}`, margin, yPos + 24);
+    // Add patient registration date if available
+    if (patient.createdAt) {
+      addField(
+        'Registered:',
+        new Date(patient.createdAt).toLocaleDateString(),
+        rightX,
+        patientY + 12
+      );
     }
 
-    // Right column - Report details
-    const rightColX = pageWidth - 80;
-    doc.setFontSize(10);
-    doc.text('Registered on:', rightColX, yPos);
-    doc.text(`${new Date(patientInfo.createdAt || new Date()).toLocaleDateString()}`, pageWidth - margin, yPos, { align: 'right' });
+    // Adjust spacing after patient information
+    yPosition += 26;
 
-    doc.text('Reported on:', rightColX, yPos + 8);
-    doc.text(`${new Date().toLocaleDateString()}`, pageWidth - margin, yPos + 8, { align: 'right' });
+    // Add diagnostic information with improved styling
+    yPosition = addSectionHeader(
+      'Diagnostic Information',
+      yPosition,
+      colors.surface2
+    );
 
-    // Middle column - Patient ID
-    const midColX = pageWidth / 2 - 20;
-    doc.text('PID', midColX, yPos);
-    doc.text(': ' + (patientInfo._id || 'N/A'), midColX + 20, yPos);
+    // Calculate total height needed for diagnostic content first
+    let diagY = yPosition + 8;
+    let contentHeight = 0;
 
-    if (patientInfo.medicalHistory) {
-      doc.text('Medical History', midColX, yPos + 16);
-      doc.text(': ' + patientInfo.medicalHistory.substring(0, 30) + (patientInfo.medicalHistory.length > 30 ? '...' : ''), midColX + 20, yPos + 16);
+    // Calculate space needed for diagnosis
+    const diagnosisText = doc.splitTextToSize(report.diagnosticName, contentWidth - 80);
+    contentHeight += diagnosisText.length * 4 + 10;
+
+    // Calculate space for condition details if available
+    if (report.conditionDetails) {
+      const splitCondition = doc.splitTextToSize(
+        report.conditionDetails,
+        contentWidth - 80
+      );
+      contentHeight += splitCondition.length * 4 + 12;
     }
 
-    // Add horizontal line
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.2);
-    doc.line(margin, yPos + 32, pageWidth - margin, yPos + 32);
-  }
-
-  private addImpression(doc: jsPDF, report: PatientReportWithPatient, margin:number, yPos: number): void {
-    // Add section title with background
-    doc.setFillColor(240, 240, 240); // Light gray background
-    doc.rect(margin, yPos - 5, 80, 7, 'F');
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('IMPRESSION', margin + 2, yPos);
-    yPos += 8;
-
-    // Add diagnostic information with bullet points
-    doc.setFont('helvetica', 'normal');
-    if (report.diagnosticName) {
-      // Split diagnostic name by line breaks or periods to create bullet points
-      const diagnosticPoints = report.diagnosticName.split(/[\n\.]+/).filter(point => point.trim().length > 0);
-
-      if (diagnosticPoints.length > 1) {
-        // Multiple points - use bullet format
-        diagnosticPoints.forEach((point, index) => {
-          doc.text(`• ${point.trim()}`, margin + 5, yPos + (index * 6));
-        });
-      } else {
-        // Single point - no bullet needed
-        doc.text(report.diagnosticName, margin, yPos);
-      }
-    } else {
-      doc.text('NO SIGNIFICANT ABNORMALITY DETECTED.', margin, yPos);
+    // Calculate space for instructions if available
+    if (report.instructions) {
+      const splitInstructions = doc.splitTextToSize(
+        report.instructions,
+        contentWidth - 15
+      );
+      contentHeight += splitInstructions.length * 4 + 14;
     }
 
-    // Add additional notes if available
+    // Calculate space for additional notes if available
     if (report.additionalNotes) {
-      yPos += (report.diagnosticName ?
-        (report.diagnosticName.split(/[\n\.]+/).filter(point => point.trim().length > 0).length * 6) + 6 :
-        10);
-
-      doc.setFont('helvetica', 'italic');
-      doc.text('Additional Notes:', margin, yPos);
-      yPos += 5;
-      doc.setFont('helvetica', 'normal');
-      doc.text(report.additionalNotes, margin + 5, yPos);
-    }
-  }
-
-  private async addScanImages(doc: jsPDF, scanImages: ScanImage[], pageWidth: number, margin:number, yPos: number): Promise<void> {
-    // Add images section title
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SCAN IMAGES:', margin, yPos);
-    yPos += 10;
-
-    // Calculate image dimensions
-    const imageWidth = (pageWidth - (margin * 3)) / 2; // Two images per row
-    const imageHeight = imageWidth * 0.75; // Maintain aspect ratio
-    const captionHeight = 20; // Height for caption text
-    const totalImageBlockHeight = imageHeight + captionHeight;
-
-    // Check if we need to add a new page for images
-    if (yPos + totalImageBlockHeight > doc.internal.pageSize.getHeight() - 40) {
-      doc.addPage();
-      yPos = margin + 10;
+      const splitNotes = doc.splitTextToSize(
+        report.additionalNotes,
+        contentWidth - 80
+      );
+      contentHeight += splitNotes.length * 4 + 12;
     }
 
-    // Add each scan image
-    for (let i = 0; i < scanImages.length; i++) {
-      const image = scanImages[i];
-      const xPos = i % 2 === 0 ? margin : margin + imageWidth + margin;
-      const currentYPos = yPos + Math.floor(i / 2) * totalImageBlockHeight;
+    // Create the main diagnostic box with calculated height
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...colors.border);
+    doc.roundedRect(margin, yPosition, contentWidth, contentHeight + 15, 2, 2, 'FD');
 
-      // Check if we need to add a new page
-      if (i > 0 && i % 2 === 0 && currentYPos + totalImageBlockHeight > doc.internal.pageSize.getHeight() - 40) {
-        doc.addPage();
-        yPos = margin + 10;
-      }
+    // Now draw the content
+    diagY = yPosition + 10;
 
-      try {
-        // Load image
-        const img = new Image();
-        img.src = image.imageUrl;
-        await new Promise<void>((resolve) => {
-          img.onload = () => {
-            // Add image to PDF with border
-            doc.setDrawColor(200, 200, 200); // Light gray border
-            doc.setLineWidth(0.5);
-            doc.rect(xPos, currentYPos, imageWidth, imageHeight);
-            doc.addImage(img, 'JPEG', xPos, currentYPos, imageWidth, imageHeight);
+    // Draw diagnosis section
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...colors.primary);
+    doc.roundedRect(margin + 5, diagY - 5, contentWidth - 10, 20, 2, 2, 'FD');
 
-            // Add image label and caption
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'bold');
-            const imageLabel = `${String.fromCharCode(65 + i)}: ${image.organ || 'Unspecified'}`;
-            doc.text(imageLabel, xPos + 2, currentYPos + imageHeight + 5);
-
-            resolve();
-          };
-          img.onerror = () => {
-            // Handle image loading error
-            doc.setDrawColor(200, 200, 200);
-            doc.setLineWidth(0.5);
-            doc.rect(xPos, currentYPos, imageWidth, imageHeight);
-            doc.text('Image not available', xPos + imageWidth/2, currentYPos + imageHeight/2, { align: 'center' });
-            resolve();
-          };
-        });
-      } catch (error) {
-        console.error('Error adding image to PDF:', error);
-        doc.text('Image not available', xPos + imageWidth/2, currentYPos + imageHeight/2, { align: 'center' });
-      }
-    }
-  }
-
-  private addFooter(doc: jsPDF, pageWidth: number, pageHeight: number): void {
-    const footerY = pageHeight - 25;
-    const margin = 10; // Define margin for footer
-
-    // Add horizontal line
-    doc.setDrawColor(51, 102, 204); // Blue color to match header
-    doc.setLineWidth(0.5);
-    doc.line(margin, footerY, pageWidth - margin, footerY);
-
-    // Add radiologist signature box
-    const signatureBoxWidth = 70;
-    const signatureBoxX = pageWidth - margin - signatureBoxWidth;
-
-    // Digital signature box
-    doc.setDrawColor(200, 200, 200); // Light gray
-    doc.setLineWidth(0.2);
-    doc.rect(signatureBoxX, footerY + 2, signatureBoxWidth, 18);
-
-    // Add radiologist signature
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('Dr. Payal Shah', signatureBoxX + signatureBoxWidth/2, footerY + 10, { align: 'center' });
-    doc.setFontSize(8);
+    doc.setTextColor(...colors.primary);
+    doc.text('Diagnosis:', margin + 8, diagY);
+
     doc.setFont('helvetica', 'normal');
-    doc.text('(MD, Radiologist)', signatureBoxX + signatureBoxWidth/2, footerY + 15, { align: 'center' });
+    doc.setTextColor(...colors.text);
+    doc.text(diagnosisText, margin + 60, diagY);
+    diagY += diagnosisText.length * 5 + 12;
 
-    // Add QR code placeholder for digital verification
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(margin, footerY + 2, 18, 18);
-    doc.setFontSize(6);
-    doc.text('SCAN TO VERIFY', margin + 9, footerY + 22, { align: 'center' });
+    // Draw condition details if available
+    if (report.conditionDetails) {
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(...colors.secondary);
+      doc.roundedRect(margin + 5, diagY - 5, contentWidth - 10, 20, 2, 2, 'FD');
 
-    // Add disclaimer
-    doc.setFontSize(6);
-    doc.text('This is a computer-generated report and does not require physical signature.', pageWidth/2, footerY + 22, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.secondary);
+      doc.text('Condition Details:', margin + 8, diagY);
 
-    // Add page number
-    doc.setFontSize(8);
-    const totalPages = doc.internal.pages.length - 1;
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, footerY + 15, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.text);
+      const splitCondition = doc.splitTextToSize(
+        report.conditionDetails,
+        contentWidth - 80
+      );
+      doc.text(splitCondition, margin + 60, diagY);
+      diagY += splitCondition.length * 4 + 12;
     }
 
-    // Add generated timestamp
-    doc.setPage(1); // Return to first page
-    doc.setFontSize(8);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, margin + 25, footerY + 10);
+    // Draw instructions if available
+    if (report.instructions) {
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(...colors.accent);
+      doc.roundedRect(margin + 5, diagY - 5, contentWidth - 10, 20, 2, 2, 'FD');
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.accent);
+      doc.text('Instructions:', margin + 8, diagY);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.text);
+      const splitInstructions = doc.splitTextToSize(
+        report.instructions,
+        contentWidth - 15
+      );
+      doc.text(splitInstructions, margin + 60, diagY);
+      diagY += splitInstructions.length * 4 + 14;
+    }
+
+    // Draw additional notes if available
+    if (report.additionalNotes) {
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(...colors.textLight);
+      doc.roundedRect(margin + 5, diagY - 5, contentWidth - 10, 20, 2, 2, 'FD');
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.textLight);
+      doc.text('Additional Notes:', margin + 8, diagY);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.text);
+      const splitNotes = doc.splitTextToSize(
+        report.additionalNotes,
+        contentWidth - 80
+      );
+      doc.text(splitNotes, margin + 60, diagY);
+      diagY += splitNotes.length * 4 + 12;
+    }
+
+    yPosition = diagY + 10;
+
+    // Add scan images if available
+    if (report.scanImages && report.scanImages.length > 0) {
+      yPosition = diagY + 8;
+
+      // Add section header for scan images
+      yPosition = addSectionHeader(
+        'Ultrasound Scan Images',
+        yPosition + 6,
+        colors.surface1
+      );
+
+      // Create a grid layout for images
+      const imagesPerRow = 2;
+      const imageWidth = (contentWidth - margin * (imagesPerRow - 1)) / imagesPerRow;
+      const imageHeight = imageWidth * 0.6;
+      const imageMargin = 3;
+
+      for (let i = 0; i < report.scanImages.length; i++) {
+        const rowIndex = Math.floor(i / imagesPerRow);
+        const colIndex = i % imagesPerRow;
+
+        const x = margin + colIndex * (imageWidth + imageMargin);
+        const y = yPosition + rowIndex * (imageHeight + 20);
+
+        try {
+          // Convert image URL to base64
+          const response = await fetch(report.scanImages[i].imageUrl);
+          const blob = await response.blob();
+          const reader = new FileReader();
+
+          await new Promise((resolve, reject) => {
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+
+          // Add the image to PDF
+          const imageData = reader.result as string;
+          doc.addImage(imageData, 'JPEG', x, y, imageWidth, imageHeight);
+
+          // Add border around the image
+          doc.setDrawColor(...colors.border);
+          doc.setLineWidth(0.5);
+          doc.rect(x, y, imageWidth, imageHeight);
+
+          // Add organ label
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...colors.text);
+          const organLabel = report.scanImages[i].organ || 'Unnamed Scan';
+          const labelWidth = doc.getTextWidth(organLabel);
+          doc.text(
+            organLabel,
+            x + (imageWidth - labelWidth) / 2,
+            y + imageHeight + 12
+          );
+        } catch (error) {
+          console.error(`Error loading image ${i}:`, error);
+          // Fallback to placeholder if image fails to load
+          doc.setDrawColor(...colors.border);
+          doc.setFillColor(255, 255, 255);
+          doc.roundedRect(x, y, imageWidth, imageHeight, 2, 2, 'FD');
+          doc.setFontSize(8);
+          doc.setTextColor(...colors.textLight);
+          doc.text('Image not available', x + 5, y + imageHeight/2);
+        }
+
+        // Update yPosition based on content
+        if (i === report.scanImages.length - 1) {
+          yPosition = y + imageHeight + 20;
+        }
+
+        // Add page number to each page
+        addPageFooter(i + 1);
+      }
+    }
+
+    // For documents without images, add footer to the last page
+    if (!report.scanImages || report.scanImages.length === 0) {
+      addPageFooter(1);
+    }
+
+    // Save the PDF with a well-formatted filename
+    doc.save(
+      `${patient.lastName}_${patient.firstName}_Report_${
+        new Date().toISOString().split('T')[0]
+      }.pdf`
+    );
+
+    // Save the PDF
+    doc.save(
+      `${patient.lastName}_${patient.firstName}_Report_${
+        new Date().toISOString().split('T')[0]
+      }.pdf`
+    );
   }
 }
