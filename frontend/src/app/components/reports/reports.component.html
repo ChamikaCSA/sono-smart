@@ -9,6 +9,58 @@
     </p>
   </div>
 
+  <!-- Report Form -->
+  <div class="patient-form-container" *ngIf="showForm">
+    <div class="form-card">
+      <h2>{{ isEditing ? 'Edit Report' : 'Add New Report' }}</h2>
+      <form (submit)="saveReport()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="diagnosticName">Diagnostic Name</label>
+            <input
+              type="text"
+              id="diagnosticName"
+              name="diagnosticName"
+              [(ngModel)]="currentReport.diagnosticName"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label for="instructions">Instructions</label>
+            <textarea
+              id="instructions"
+              name="instructions"
+              [(ngModel)]="currentReport.instructions"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="conditionDetails">Condition Details</label>
+            <textarea
+              id="conditionDetails"
+              name="conditionDetails"
+              [(ngModel)]="currentReport.conditionDetails"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="additionalNotes">Additional Notes</label>
+            <textarea
+              id="additionalNotes"
+              name="additionalNotes"
+              [(ngModel)]="currentReport.additionalNotes"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelForm()">Cancel</button>
+          <button type="submit" class="btn-primary">{{ isEditing ? 'Update' : 'Save' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 <!-- Report Details Modal -->
 <div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeModal($event)">
   <div class="modal-content">
@@ -22,7 +74,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -51,7 +103,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>
@@ -102,7 +153,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -131,7 +182,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>
@@ -180,7 +230,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -209,7 +259,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>
@@ -261,7 +310,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -290,7 +339,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>
@@ -396,7 +444,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -425,7 +473,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>
@@ -473,7 +520,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -502,7 +549,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>
@@ -604,7 +650,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -633,7 +679,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>
@@ -681,7 +726,7 @@
       <div class="report-details">
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
-          <div class="detail-value">{{ selectedReport.patient }}</div>
+          <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Diagnostic:</div>
@@ -710,7 +755,6 @@
               <img [src]="image.imageUrl" [alt]="image.organ" class="scan-image">
               <div class="scan-image-info">
                 <div><strong>Organ:</strong> {{ image.organ }}</div>
-                <div><strong>Findings:</strong> {{ image.findings }}</div>
               </div>
             </div>
           </div>

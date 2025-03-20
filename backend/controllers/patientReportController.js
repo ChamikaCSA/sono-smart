@@ -94,8 +94,91 @@ const getPatientReport = async (req, res) => {
   }
 };
 
+// @desc    Update patient report
+// @route   PUT /api/reports/:id
+// @access  Private
+const updatePatientReport = async (req, res) => {
+  try {
+    let patientReport = await PatientReport.findById(req.params.id);
+
+    if (!patientReport) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient report not found'
+      });
+    }
+
+    // Make sure user owns the patient report
+    if (patientReport.user.toString() !== req.user.id && req.user.role !== 'professional') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to update this patient report'
+      });
+    }
+
+    // Update patient report
+    patientReport = await PatientReport.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    ).populate('patient', 'firstName lastName dateOfBirth gender email phone address createdAt');
+
+    res.status(200).json({
+      success: true,
+      data: patientReport
+    });
+  } catch (error) {
+    console.error('Error updating patient report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating patient report',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Delete patient report
+// @route   DELETE /api/reports/:id
+// @access  Private
+const deletePatientReport = async (req, res) => {
+  try {
+    const patientReport = await PatientReport.findById(req.params.id);
+
+    if (!patientReport) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient report not found'
+      });
+    }
+
+    // Make sure user owns the patient report
+    if (patientReport.user.toString() !== req.user.id && req.user.role !== 'professional') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to delete this patient report'
+      });
+    }
+
+    await patientReport.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (error) {
+    console.error('Error deleting patient report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting patient report',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   savePatientReport,
   getPatientReports,
-  getPatientReport
+  getPatientReport,
+  updatePatientReport,
+  deletePatientReport
 };

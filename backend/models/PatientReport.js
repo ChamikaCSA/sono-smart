@@ -21,10 +21,6 @@ const PatientReportSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Organ name is required']
       },
-      findings: {
-        type: String,
-        required: [true, 'Findings are required']
-      }
     }
   ],
   diagnosticName: {

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ReportService, PatientReportWithPatient } from '../../services/report.service';
 import { QuizService, QuizResult } from '../../services/quiz.service';
@@ -11,7 +12,7 @@ import { PatientService } from 'src/app/services/patient.service';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css',
   animations: [
@@ -158,6 +159,45 @@ export class ReportsComponent implements OnInit {
     this.isEditing = true;
     this.showForm = true;
     this.showDetailsModal = false;
+  }
+
+  saveReport(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    if (!this.currentReport.diagnosticName) {
+      this.errorMessage = 'Diagnostic name is required';
+      this.isLoading = false;
+      return;
+    }
+
+    if (this.isEditing && this.currentReport._id) {
+      this.reportService.updatePatientReport(this.currentReport._id, this.currentReport).subscribe({
+        next: (report) => {
+          if (report) {
+            this.loadPatientReports();
+            this.cancelForm();
+          } else {
+            this.errorMessage = 'Failed to update report. Please try again.';
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error updating report:', error);
+          this.errorMessage = 'Failed to update report. Please try again.';
+          this.isLoading = false;
+        }
+      });
+    } else {
+      this.errorMessage = 'Invalid report data';
+      this.isLoading = false;
+    }
+  }
+
+  cancelForm(): void {
+    this.showForm = false;
+    this.currentReport = {};
+    this.isEditing = false;
   }
 
   confirmDelete(report: PatientReportWithPatient): void {

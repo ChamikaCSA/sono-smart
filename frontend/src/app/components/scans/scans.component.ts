@@ -271,12 +271,6 @@ export class ScansComponent implements OnInit {
       scanImages.push({
         imageUrl: activeSection.imagePreview,
         organ: activeSection.reportOrgan,
-        findings:
-          activeSection.detectedOrgans.length > 0
-            ? activeSection.detectedOrgans
-                .map((o) => `${o.name} (${(o.confidence * 100).toFixed(1)}%)`)
-                .join(', ')
-            : 'No findings available',
       });
     }
 

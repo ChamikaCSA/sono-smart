@@ -266,17 +266,6 @@ export class PdfService {
             const imageLabel = `${String.fromCharCode(65 + i)}: ${image.organ || 'Unspecified'}`;
             doc.text(imageLabel, xPos + 2, currentYPos + imageHeight + 5);
 
-            // Add findings if available
-            if (image.findings) {
-              doc.setFont('helvetica', 'normal');
-              const findingsText = image.findings.length > 60 ?
-                image.findings.substring(0, 57) + '...' :
-                image.findings;
-              doc.text(`Findings: ${findingsText}`, xPos + 2, currentYPos + imageHeight + 12, {
-                maxWidth: imageWidth - 4
-              });
-            }
-
             resolve();
           };
           img.onerror = () => {

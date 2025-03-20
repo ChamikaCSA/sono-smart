@@ -8,7 +8,6 @@ import { Patient } from './patient.service';
 export interface ScanImage {
   imageUrl: string;
   organ: string;
-  findings: string;
 }
 
 export interface PatientReport {
