@@ -1,12 +1,14 @@
 <div class="reports-container">
-  <div class="reports-header">
-    <h1 class="reports-title">Reports</h1>
-    <p class="reports-subtitle" *ngIf="authService.getCurrentUser()?.role === 'trainee'">
-      View your training progress and performance history
-    </p>
-    <p class="reports-subtitle" *ngIf="authService.getCurrentUser()?.role === 'professional'">
-      Manage and review patient diagnostic reports
-    </p>
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>Reports Dashboard</h1>
+      <p class="hero-description" *ngIf="authService.getCurrentUser()?.role === 'trainee'">
+        View your training progress and performance history
+      </p>
+      <p class="hero-description" *ngIf="authService.getCurrentUser()?.role === 'professional'">
+        Manage and review patient diagnostic reports
+      </p>
+    </div>
   </div>
 
   <!-- Report Form -->
