@@ -35,9 +35,20 @@ export class RegisterComponent {
       ]],
       confirmPassword: ['', Validators.required],
       role: ['', Validators.required],
-      proficiency: ['', Validators.required],
+      proficiency: [null],
     }, {
       validator: this.mustMatch('password', 'confirmPassword')
+    });
+
+    this.registerForm.get('role')?.valueChanges.subscribe(role => {
+      const proficiencyControl = this.registerForm.get('proficiency');
+      if (role === 'professional') {
+        proficiencyControl?.setValidators(Validators.required);
+      } else {
+        proficiencyControl?.clearValidators();
+        proficiencyControl?.setValue(null);
+      }
+      proficiencyControl?.updateValueAndValidity();
     });
 
     this.registerForm.get('password')?.valueChanges.subscribe(value => {

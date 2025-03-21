@@ -29,8 +29,9 @@ const UserSchema = new mongoose.Schema({
   },
   proficiency: {
     type: String,
-    enum: ['MO', 'sonographer', 'radiologist'],
-    required: function() { return this.role === 'professional'; }
+    enum: ['MO', 'sonographer', 'radiologist', null],
+    required: function() { return this.role === 'professional'; },
+    default: null
   },
   createdAt: {
     type: Date,

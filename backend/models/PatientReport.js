@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const PatientReportSchema = new mongoose.Schema({
+  friendlyId: {
+    type: String,
+    unique: true
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

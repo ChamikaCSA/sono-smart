@@ -12,6 +12,7 @@ export interface ScanImage {
 
 export interface PatientReport {
   _id?: string;
+  friendlyId?: string;
   user?: string;
   patient: string;
   scanImages: ScanImage[];
@@ -24,6 +25,7 @@ export interface PatientReport {
 
 export interface PatientReportWithPatient {
   _id?: string;
+  friendlyId?: string;
   user?: string;
   patient: Patient;
   scanImages: ScanImage[];

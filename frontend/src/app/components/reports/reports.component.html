@@ -75,6 +75,10 @@
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
         <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
+        <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
@@ -154,6 +158,10 @@
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
         <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
+        <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
@@ -230,6 +238,10 @@
     </div>
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
+        <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
@@ -310,6 +322,10 @@
     </div>
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
+        <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
@@ -445,6 +461,10 @@
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
         <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
+        <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
         </div>
@@ -520,6 +540,10 @@
     </div>
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
+        <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
@@ -603,7 +627,7 @@
         <tbody>
           <ng-container *ngFor="let report of patientReports">
             <tr>
-              <td>{{ report._id }}</td>
+              <td>{{ report.friendlyId || report._id }}</td>
               <td>{{ report.patient.firstName }} {{ report.patient.lastName }}</td>
               <td>{{ report.diagnosticName }}</td>
               <td>
@@ -650,6 +674,10 @@
     </div>
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
+        <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>
@@ -726,6 +754,10 @@
     </div>
     <div class="modal-body" *ngIf="selectedReport">
       <div class="report-details">
+        <div class="detail-row">
+          <div class="detail-label">Report ID:</div>
+          <div class="detail-value">{{ selectedReport.friendlyId || selectedReport._id }}</div>
+        </div>
         <div class="detail-row">
           <div class="detail-label">Patient:</div>
           <div class="detail-value">{{ selectedReport.patient.firstName }} {{ selectedReport.patient.lastName }}</div>

@@ -1,6 +1,37 @@
 const PatientReport = require('../models/PatientReport');
 const Patient = require('../models/Patient');
 
+// Generate a friendly ID for patient reports in the format REP-YYYY-XXXX
+const generateFriendlyId = async (patient) => {
+  const currentYear = new Date().getFullYear();
+  const prefix = `REP-${currentYear}-`;
+
+  // Find the highest numbered report for this year
+  const highestReport = await PatientReport.findOne({
+    friendlyId: { $regex: `^${prefix}` }
+  })
+    .sort({ friendlyId: -1 });
+
+  let nextNumber = 1;
+
+  if (highestReport && highestReport.friendlyId) {
+    // Extract the number part from the existing ID
+    const currentNumber = parseInt(highestReport.friendlyId.slice(prefix.length), 10);
+    nextNumber = currentNumber + 1;
+  }
+
+  const patientName = await Patient.findById(patient);
+  if (!patientName) {
+    throw new Error('Patient not found');
+  }
+  const patientFirstName = patientName.firstName;
+  const patientLastName = patientName.lastName;
+  const patientNameInitials = patientFirstName + patientLastName.charAt(0);
+
+  // Format the number with leading zeros (4 digits)
+  return `${prefix}${nextNumber.toString().padStart(4, '0')}-${patientNameInitials}`;
+};
+
 // @desc    Save patient report
 // @route   POST /api/reports
 // @access  Private
@@ -8,8 +39,12 @@ const savePatientReport = async (req, res) => {
   try {
     const { patient, scanImages, diagnosticName, instructions, conditionDetails, additionalNotes } = req.body;
 
+    // Generate a friendly ID for the report
+    const friendlyId = await generateFriendlyId(patient);
+
     // Create patient report
     const patientReport = await PatientReport.create({
+      friendlyId,
       user: req.user.id,
       patient,
       scanImages,
