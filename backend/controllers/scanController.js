@@ -120,14 +120,18 @@ const detectOrgans = async (req, res) => {
     const scriptPath = path.join(__dirname, '..', 'utils', 'organDetection.py');
 
     // Spawn Python process
-    const pythonProcess = spawn('python3', [scriptPath]);
+    const pythonProcess = spawn('python', [scriptPath]);
 
     let result = '';
     let errorOutput = '';
 
     // Collect data from script
     pythonProcess.stdout.on('data', (data) => {
-      result += data.toString();
+      const output = data.toString();
+      // Only add to result if the line starts with '{'
+      if (output.trim().startsWith('{')) {
+        result += output;
+      }
     });
 
     // Collect error data
@@ -149,6 +153,7 @@ const detectOrgans = async (req, res) => {
 
       try {
         // Parse the JSON result from the Python script
+        console.log('Detection result:', result);
         const detectionResult = JSON.parse(result);
 
         res.status(200).json({

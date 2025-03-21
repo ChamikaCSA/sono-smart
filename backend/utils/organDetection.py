@@ -1,3 +1,4 @@
+import base64
 import os
 import sys
 import json
@@ -7,6 +8,23 @@ from ultralytics import YOLO
 
 # Class names for organ detection
 CLASS_NAMES = ['bladder', 'bowel', 'gallbladder', 'kidney', 'liver', 'spleen']
+
+def base64_to_image(base64_string):
+    """Convert base64 string to image"""
+    try:
+        # Convert base64 string to numpy array
+        image_data = np.frombuffer(base64.b64decode(base64_string), np.uint8)
+
+        # Decode the image
+        image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
+
+        return image
+
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e)
+        }
 
 def detect_organs(image_data):
     """Detect organs in the provided image using YOLOv8 model"""
@@ -51,9 +69,12 @@ def detect_organs(image_data):
 if __name__ == '__main__':
     # Read input from stdin (base64 encoded image)
     input_data = sys.stdin.read().strip()
+    
+    # Convert base64 string to image
+    image = base64_to_image(input_data)
 
     # Process the image
-    result = detect_organs(input_data)
+    result = detect_organs(image)
 
     # Output JSON result
     print(json.dumps(result))
